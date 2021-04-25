@@ -1,0 +1,6 @@
+rollingBuffer.c:33:22:RollingBufferCreateBuffer	40	static
+rollingBuffer.c:57:22:RollingBufferDestroyBuffer	16	static
+rollingBuffer.c:69:22:RollingBufferWrite	24	static
+rollingBuffer.c:88:22:RollingBufferRead	40	static
+rollingBuffer.c:114:22:RollingBufferBurstRead	48	static
+rollingBuffer.c:146:10:RollingBufferGetBufferSize	24	static

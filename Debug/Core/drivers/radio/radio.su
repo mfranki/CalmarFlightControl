@@ -1,0 +1,2 @@
+radio.c:39:6:RadioIrq	16	static
+radio.c:44:6:RadioProcess	16	static
