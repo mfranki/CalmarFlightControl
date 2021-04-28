@@ -84,7 +84,7 @@ bool PosCalcDispPos()
 
     Bmx055GetData(&sensorData);
     //UartWrite("%i\t%i\t%i\t%i\r\n",dataInternal[0],dataInternal[1],dataInternal[2],dataInternal[3]);
-    UartWrite("%f\t%f\t%f\r\n",sensorData.ay,sensorData.my,sensorData.gy);
+    //UartWrite("%f\t%f\t%f\r\n",sensorData.ay,sensorData.my,sensorData.gy);
     //UartWrite("%f\r\n",sqrt(sensorData.mx*sensorData.mx+sensorData.my*sensorData.my+sensorData.mz*sensorData.mz));
     ///acc filtering
     float value = 0;

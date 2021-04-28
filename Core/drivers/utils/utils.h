@@ -34,14 +34,13 @@
 void UtilsInit();
 
 
-/**@brief calculates time elapsed from last time this function was called
+/**@brief calculates time elapsed from @param lastTimeCalled
  *        can measure up to ~60s after that resets to 0
  *        ! NEEDS TO BE CALLED AT LEAST EVERY 60s
  *
  * @param [in/out] lastTimeCalled - last time this function was called,
- *                                  this param is changed to current time after calling function,
- *                                  and is used to calculate elapsed time
- * @param [in] setCurrentTime - when 1 sets @param lastTimeCalled to current time
+ *                                  this param is used to calculate elapsed time
+ * @param [in] setCurrentTime - when true sets @param lastTimeCalled to current time
  * @return elapsed time in [s] with precision of [us]
  */
 float GetTimeElapsed(uint32_t* lastTimeCalled, bool setCurrentTime);
