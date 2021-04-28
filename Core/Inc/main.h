@@ -66,12 +66,12 @@ void Error_Handler(void);
 #define SPI_LPS_MISO_GPIO_Port GPIOC
 #define SPI_LPS_MOSI_Pin GPIO_PIN_3
 #define SPI_LPS_MOSI_GPIO_Port GPIOC
-#define PWM_ESC_6_Pin GPIO_PIN_1
-#define PWM_ESC_6_GPIO_Port GPIOA
-#define PWM_ESC_7_Pin GPIO_PIN_2
-#define PWM_ESC_7_GPIO_Port GPIOA
-#define PWM_ESC_8_Pin GPIO_PIN_3
-#define PWM_ESC_8_GPIO_Port GPIOA
+#define DEBUG_OUT_3_Pin GPIO_PIN_1
+#define DEBUG_OUT_3_GPIO_Port GPIOA
+#define DEBUG_OUT_2_Pin GPIO_PIN_2
+#define DEBUG_OUT_2_GPIO_Port GPIOA
+#define DEBUG_OUT_1_Pin GPIO_PIN_3
+#define DEBUG_OUT_1_GPIO_Port GPIOA
 #define LPS_CS_Pin GPIO_PIN_4
 #define LPS_CS_GPIO_Port GPIOA
 #define SPI_BMX_SCK_Pin GPIO_PIN_5
@@ -116,8 +116,8 @@ void Error_Handler(void);
 #define PWM_ESC_3_GPIO_Port GPIOA
 #define PWM_ESC_4_Pin GPIO_PIN_11
 #define PWM_ESC_4_GPIO_Port GPIOA
-#define PWM_ESC_5_Pin GPIO_PIN_15
-#define PWM_ESC_5_GPIO_Port GPIOA
+#define DEBUG_OUT_4_Pin GPIO_PIN_15
+#define DEBUG_OUT_4_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -60,7 +60,7 @@
 /* USER CODE END 0 */
                         
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                                        /**
+                    /**
   * Initializes the Global MSP.
   */
 void HAL_MspInit(void)
@@ -304,6 +304,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
   /* USER CODE BEGIN TIM1_MspPostInit 0 */
 
   /* USER CODE END TIM1_MspPostInit 0 */
+  
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**TIM1 GPIO Configuration    
     PA8     ------> TIM1_CH1
@@ -321,30 +322,6 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
   /* USER CODE BEGIN TIM1_MspPostInit 1 */
 
   /* USER CODE END TIM1_MspPostInit 1 */
-  }
-  else if(htim->Instance==TIM2)
-  {
-  /* USER CODE BEGIN TIM2_MspPostInit 0 */
-
-  /* USER CODE END TIM2_MspPostInit 0 */
-  
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**TIM2 GPIO Configuration    
-    PA1     ------> TIM2_CH2
-    PA2     ------> TIM2_CH3
-    PA3     ------> TIM2_CH4
-    PA15     ------> TIM2_CH1 
-    */
-    GPIO_InitStruct.Pin = PWM_ESC_6_Pin|PWM_ESC_7_Pin|PWM_ESC_8_Pin|PWM_ESC_5_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN TIM2_MspPostInit 1 */
-
-  /* USER CODE END TIM2_MspPostInit 1 */
   }
 
 }

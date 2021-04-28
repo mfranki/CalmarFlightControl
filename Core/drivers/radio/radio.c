@@ -9,6 +9,7 @@
 
 #include "drivers/radio/radio.h"
 #include "drivers/uart/uart.h"
+#include "drivers/utils/utils.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -18,13 +19,20 @@
                           PRIVATE DEFINES / MACROS
 *****************************************************************************/
 
-
+#define PWM_MAX_UP_TIME_S (0.002f)  ///< [s], 50Hz PWM -> 2ms == 10% duty cycle
+#define PWM_MIN_UP_TIME_S (0.001f)  ///< [s], 50Hz PWM -> 1ms == 5% duty cycle
+#define RADIO_MAX_DOWN_TIME_S (1.0f)  ///< [s]
 
 /*****************************************************************************
                      PRIVATE STRUCTS / ENUMS / VARIABLES
 *****************************************************************************/
 
-static uint32_t dataInternal[4] = {0,0,0,0};
+static uint32_t channelStateChangeTime[RADIO_CHANNEL_COUNT] = {0,0,0,0,0,0};
+
+/** @brief keeps channel data in range   0..1 **/
+static float channelData[RADIO_CHANNEL_COUNT] = {0,0,0,0,0,0};
+
+static bool radioSignalAvailable = false;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION
@@ -36,14 +44,38 @@ static uint32_t dataInternal[4] = {0,0,0,0};
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
 
-void RadioIrq(uint32_t* data /*radioChannel_t channel, bool risingEdge*/)
+void RadioIrq(radioChannel_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
-    memcpy(dataInternal,data,4*sizeof(uint32_t));
+    if(channel >= RADIO_CHANNEL_COUNT)
+    {
+        return;
+    }
+
+    float timeElapsed = GetTimeElapsed(&channelStateChangeTime[channel], true);
+
+    if(0 == HAL_GPIO_ReadPin(GPIOx,GPIO_Pin))
+    {
+        channelData[channel] = (timeElapsed-PWM_MIN_UP_TIME_S)/(PWM_MAX_UP_TIME_S-PWM_MIN_UP_TIME_S);
+    }
+
+    radioSignalAvailable = true;
 }
 
-void RadioProcess()
+void RadioTask()
 {
-    UartWrite("%i\t%i\t%i\t%i\r\n",dataInternal[0],dataInternal[1],dataInternal[2],dataInternal[3]);
+    while(1)
+    {
+        for(uint8_t channel=RADIO_CHANNEL_1; channel<RADIO_CHANNEL_COUNT;channel++)
+        {
+            if(GetTimeElapsed(&channelStateChangeTime[channel], false) > RADIO_MAX_DOWN_TIME_S)
+            {
+                channelData[channel] = 0;
+                radioSignalAvailable = false;
+            }
+        }
+
+        osDelay(20);
+    }
 }
 
 /******************************************************************************

@@ -1,3 +1,0 @@
-utils.c:39:6:UtilsInit	4	static
-utils.c:47:7:GetTimeElapsed	24	static
-utils.c:65:7:UtilsMap	40	static
