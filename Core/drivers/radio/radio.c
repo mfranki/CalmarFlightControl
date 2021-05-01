@@ -8,8 +8,8 @@
  ****************************************************************************/
 
 #include "drivers/radio/radio.h"
-#include "drivers/uart/uart.h"
 #include "drivers/utils/utils.h"
+#include "cmsis_os.h"
 
 #include <stdbool.h>
 #include <stdint.h>

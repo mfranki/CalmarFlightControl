@@ -76,16 +76,12 @@ bool PosCalcInit()
     bool BMX055CalibrateAccGyro();
     return true;
 }
-static uint32_t dataInternal[4] = {0,1,2,3};
 
 bool PosCalcDispPos()
 {
     bmx055Data_t sensorData;
 
     Bmx055GetData(&sensorData);
-    //UartWrite("%i\t%i\t%i\t%i\r\n",dataInternal[0],dataInternal[1],dataInternal[2],dataInternal[3]);
-    //UartWrite("%f\t%f\t%f\r\n",sensorData.ay,sensorData.my,sensorData.gy);
-    //UartWrite("%f\r\n",sqrt(sensorData.mx*sensorData.mx+sensorData.my*sensorData.my+sensorData.mz*sensorData.mz));
     ///acc filtering
     float value = 0;
     RollingBufferRead(bufferHandleX, &value, ACC_LOW_PASS_FILTER_BUFFER_SIZE-1);
@@ -132,9 +128,6 @@ bool PosCalcDispPos()
     roll = nextRoll*(1-ACC_ROLL_SHARE) + ACC_ROLL_SHARE*atan2(sensorData.ay,sensorData.az)*180/3.141;
     pitch = nextPitch*(1-ACC_PITCH_SHARE) + ACC_PITCH_SHARE*atan2(-sensorData.ax,sensorData.az)*180/3.141;
 
-    //UartWrite("%f\t%f\t%f\r\n",roll,pitch,atan2(sensorData.my,sensorData.mx)*180/3.141);
-
-    //UartWrite("%f\r\n",sensorData.ay);
     return true;
 }
 
