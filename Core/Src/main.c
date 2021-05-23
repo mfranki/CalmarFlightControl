@@ -31,6 +31,7 @@
 #include "middleware/posCalc/posCalc.h"
 #include "drivers/adc/adc.h"
 #include "middleware/batteryStatus/batteryStatus.h"
+#include "middleware/mahonyFilter/mahonyFilter.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -127,8 +128,9 @@ int main(void)
   if(!Bmx055Init(&hspi1) ||
      !UartInit(&huart1) ||
      !AdcInit(&hadc1) ||
-     !BatteryStatusInit() ||
-     !PosCalcInit())
+   //  !BatteryStatusInit() ||
+     !PosCalcInit() ||
+     !MahonyFilterInit())
   {
       while(1){}
   }
@@ -153,22 +155,25 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 100);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  osThreadDef(radioTask, RadioTask, osPriorityAboveNormal, 0, 100);
+  /**osThreadDef(radioTask, RadioTask, osPriorityNormal, 0, 100);
   osThreadCreate(osThread(radioTask), NULL);
 
-  osThreadDef(batteryStatusTask, BatteryStatusTask, osPriorityAboveNormal, 0, 100);
-  osThreadCreate(osThread(batteryStatusTask), NULL);
+  osThreadDef(batteryStatusTask, BatteryStatusTask, osPriorityNormal, 0, 100);
+  osThreadCreate(osThread(batteryStatusTask), NULL);*/
+
+  osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 300);
+  osThreadCreate(osThread(mahonyFilterTask), NULL);
 
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
   osKernelStart();
- 
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -190,11 +195,11 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage 
+  /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -208,7 +213,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -240,7 +245,7 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 1 */
 
   /* USER CODE END ADC1_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
@@ -258,7 +263,7 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
   sConfig.Channel = ADC_CHANNEL_11;
   sConfig.Rank = 1;
@@ -296,7 +301,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -497,7 +502,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 1000000;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -514,10 +519,10 @@ static void MX_USART1_UART_Init(void)
 
 }
 
-/** 
+/**
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void) 
+static void MX_DMA_Init(void)
 {
 
   /* DMA controller clock enable */
@@ -546,7 +551,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DEBUG_OUT_3_Pin|DEBUG_OUT_2_Pin|DEBUG_OUT_1_Pin|LPS_CS_Pin 
+  HAL_GPIO_WritePin(GPIOA, DEBUG_OUT_3_Pin|DEBUG_OUT_2_Pin|DEBUG_OUT_1_Pin|LPS_CS_Pin
                           |DEBUG_OUT_4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -555,9 +560,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(CS_MAG_GPIO_Port, CS_MAG_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : DEBUG_OUT_3_Pin DEBUG_OUT_2_Pin DEBUG_OUT_1_Pin LPS_CS_Pin 
+  /*Configure GPIO pins : DEBUG_OUT_3_Pin DEBUG_OUT_2_Pin DEBUG_OUT_1_Pin LPS_CS_Pin
                            DEBUG_OUT_4_Pin */
-  GPIO_InitStruct.Pin = DEBUG_OUT_3_Pin|DEBUG_OUT_2_Pin|DEBUG_OUT_1_Pin|LPS_CS_Pin 
+  GPIO_InitStruct.Pin = DEBUG_OUT_3_Pin|DEBUG_OUT_2_Pin|DEBUG_OUT_1_Pin|LPS_CS_Pin
                           |DEBUG_OUT_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -622,11 +627,9 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-      PosCalcDispPos();
-
       osDelay(20);
   }
-  /* USER CODE END 5 */ 
+  /* USER CODE END 5 */
 }
 
  /**
@@ -662,9 +665,6 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-
-
-
 #ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
@@ -674,7 +674,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

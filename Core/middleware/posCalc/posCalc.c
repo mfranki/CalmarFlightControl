@@ -73,7 +73,7 @@ bool PosCalcInit()
     RollingBufferCreateBuffer(&bufferHandleXm, sizeof(float), MAG_LOW_PASS_FILTER_BUFFER_SIZE, &zero);
     RollingBufferCreateBuffer(&bufferHandleYm, sizeof(float), MAG_LOW_PASS_FILTER_BUFFER_SIZE, &zero);
 
-    bool BMX055CalibrateAccGyro();
+    BMX055CalibrateAccGyro();
     return true;
 }
 
