@@ -66,6 +66,8 @@ void Error_Handler(void);
 #define SPI_LPS_MISO_GPIO_Port GPIOC
 #define SPI_LPS_MOSI_Pin GPIO_PIN_3
 #define SPI_LPS_MOSI_GPIO_Port GPIOC
+#define BEEPER_Pin GPIO_PIN_0
+#define BEEPER_GPIO_Port GPIOA
 #define DEBUG_OUT_3_Pin GPIO_PIN_1
 #define DEBUG_OUT_3_GPIO_Port GPIOA
 #define DEBUG_OUT_2_Pin GPIO_PIN_2
@@ -116,8 +118,6 @@ void Error_Handler(void);
 #define PWM_ESC_3_GPIO_Port GPIOA
 #define PWM_ESC_4_Pin GPIO_PIN_11
 #define PWM_ESC_4_GPIO_Port GPIOA
-#define DEBUG_OUT_4_Pin GPIO_PIN_15
-#define DEBUG_OUT_4_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

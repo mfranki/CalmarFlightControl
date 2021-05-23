@@ -1,0 +1,10 @@
+BMX055.c:269:6:Bmx055Init	40	static
+BMX055.c:339:6:Bmx055GetData	32	static
+BMX055.c:398:6:BMX055CalibrateAccGyro	16	static
+BMX055.c:491:6:BMX055CalibrateMag	4	static
+BMX055.c:505:13:ReadAddress	24	static
+BMX055.c:533:13:WriteAddress	24	static
+BMX055.c:561:13:ReadBurst	24	static
+BMX055.c:592:13:SetAccRange	16	static
+BMX055.c:616:13:SetGyroRange	16	static
+BMX055.c:643:13:CheckConnection	16	static

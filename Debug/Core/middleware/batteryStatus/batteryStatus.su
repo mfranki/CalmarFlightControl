@@ -1,0 +1,5 @@
+batteryStatus.c:69:6:BatteryStatusInit	16	static
+batteryStatus.c:85:17:BatteryStatusGetStatus	4	static
+batteryStatus.c:90:6:BatteryStatusTask	24	static
+batteryStatus.c:138:16:DetectCellCount	16	static
+batteryStatus.c:153:24:GetMomentaryBatteryStatus	16	static
