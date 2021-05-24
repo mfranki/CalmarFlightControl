@@ -1,2 +1,0 @@
-radio.c:47:6:RadioIrq	24	static
-radio.c:64:6:RadioTask	16	static

@@ -1,3 +1,0 @@
-digitalFilter.c:48:6:DigitalFilterCreateFilter	40	static
-digitalFilter.c:99:6:DigitalFilterDeleteFilter	16	static
-digitalFilter.c:109:6:DigitalFilterProcess	48	static
