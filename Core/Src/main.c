@@ -23,14 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "drivers/BMX055/BMX055.h"
-#include "drivers/uart/uart.h"
-#include "drivers/utils/utils.h"
-#include "drivers/radio/radio.h"
-#include "middleware/posCalc/posCalc.h"
-#include "drivers/adc/adc.h"
-#include "middleware/batteryStatus/batteryStatus.h"
-#include "middleware/mahonyFilter/mahonyFilter.h"
+#include "app/deviceManager/deviceManager.h"
+
 #include "drivers/buzzer/buzzer.h"
 #include "middleware/soundNotifications/soundNotifications.h"
 /* USER CODE END Includes */
@@ -42,15 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define INITIALIZATION_FAIL_LOOP(ERROR_INDEX) while(1)                                                                          \
-                                              {                                                                                 \
-                                                  SoundNotificationsPlayInBlockingMode(SN_INITIALIZATION_ERROR);                \
-                                                  uint8_t count = ERROR_INDEX<1 ? 0 : ERROR_INDEX-1;                            \
-                                                  for(uint8_t i=0; i<count; i++)                                                \
-                                                  {                                                                             \
-                                                      SoundNotificationsPlayInBlockingMode(SN_INITIALIZATION_ERROR_INDEX);      \
-                                                  }                                                                             \
-                                              }
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -132,37 +118,7 @@ int main(void)
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
-  UtilsInit();
-  if(!BuzzerInit(&htim2, TIM_CHANNEL_1))
-  {
-      INITIALIZATION_FAIL_LOOP(1)
-  }
-  if(!Bmx055Init(&hspi1))
-  {
-      INITIALIZATION_FAIL_LOOP(2)
-  }
-  if(!UartInit(&huart1))
-  {
-      INITIALIZATION_FAIL_LOOP(3)
-  }
-  if(!AdcInit(&hadc1))
-  {
-      INITIALIZATION_FAIL_LOOP(4)
-  }
-  /*if(!BatteryStatusInit())
-  {
-      INITIALIZATION_FAIL_LOOP(5)
-  }*/
-  if(!PosCalcInit())
-  {
-      INITIALIZATION_FAIL_LOOP(6)
-  }
-  if(!MahonyFilterInit())
-  {
-      INITIALIZATION_FAIL_LOOP(7)
-  }
-
+  DeviceManagerInit(&hadc1,&hspi1,&htim2,&huart1);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -187,19 +143,6 @@ int main(void)
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /**osThreadDef(radioTask, RadioTask, osPriorityNormal, 0, 100);
-  osThreadCreate(osThread(radioTask), NULL);
-
-  osThreadDef(batteryStatusTask, BatteryStatusTask, osPriorityNormal, 0, 100);
-  osThreadCreate(osThread(batteryStatusTask), NULL);*/
-/**
-  osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 300);
-  osThreadCreate(osThread(mahonyFilterTask), NULL);*/
-
-  osThreadDef(soundNotificationTask, SoundNotificationTask, osPriorityNormal, 0, 100);
-  osThreadCreate(osThread(soundNotificationTask), NULL);
-
-
 
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -670,7 +613,7 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-    uint8_t cntr = 0;
+
   for(;;)
   {
       osDelay(2000);
