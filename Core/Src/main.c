@@ -31,6 +31,8 @@
 #include "drivers/adc/adc.h"
 #include "middleware/batteryStatus/batteryStatus.h"
 #include "middleware/mahonyFilter/mahonyFilter.h"
+#include "drivers/buzzer/buzzer.h"
+#include "middleware/soundNotifications/soundNotifications.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,6 +42,15 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define INITIALIZATION_FAIL_LOOP(ERROR_INDEX) while(1)                                                                          \
+                                              {                                                                                 \
+                                                  SoundNotificationsPlayInBlockingMode(SN_INITIALIZATION_ERROR);                \
+                                                  uint8_t count = ERROR_INDEX<1 ? 0 : ERROR_INDEX-1;                            \
+                                                  for(uint8_t i=0; i<count; i++)                                                \
+                                                  {                                                                             \
+                                                      SoundNotificationsPlayInBlockingMode(SN_INITIALIZATION_ERROR_INDEX);      \
+                                                  }                                                                             \
+                                              }
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -122,16 +133,34 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-
   UtilsInit();
-  if(!Bmx055Init(&hspi1) ||
-     !UartInit(&huart1) ||
-     !AdcInit(&hadc1) ||
-   //  !BatteryStatusInit() ||
-     !PosCalcInit() ||
-     !MahonyFilterInit())
+  if(!BuzzerInit(&htim2, TIM_CHANNEL_1))
   {
-      while(1){}
+      INITIALIZATION_FAIL_LOOP(1)
+  }
+  if(!Bmx055Init(&hspi1))
+  {
+      INITIALIZATION_FAIL_LOOP(2)
+  }
+  if(!UartInit(&huart1))
+  {
+      INITIALIZATION_FAIL_LOOP(3)
+  }
+  if(!AdcInit(&hadc1))
+  {
+      INITIALIZATION_FAIL_LOOP(4)
+  }
+  /*if(!BatteryStatusInit())
+  {
+      INITIALIZATION_FAIL_LOOP(5)
+  }*/
+  if(!PosCalcInit())
+  {
+      INITIALIZATION_FAIL_LOOP(6)
+  }
+  if(!MahonyFilterInit())
+  {
+      INITIALIZATION_FAIL_LOOP(7)
   }
 
   /* USER CODE END 2 */
@@ -163,9 +192,14 @@ int main(void)
 
   osThreadDef(batteryStatusTask, BatteryStatusTask, osPriorityNormal, 0, 100);
   osThreadCreate(osThread(batteryStatusTask), NULL);*/
-
+/**
   osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 300);
-  osThreadCreate(osThread(mahonyFilterTask), NULL);
+  osThreadCreate(osThread(mahonyFilterTask), NULL);*/
+
+  osThreadDef(soundNotificationTask, SoundNotificationTask, osPriorityNormal, 0, 100);
+  osThreadCreate(osThread(soundNotificationTask), NULL);
+
+
 
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -494,7 +528,7 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
 
@@ -636,9 +670,10 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
+    uint8_t cntr = 0;
   for(;;)
   {
-      osDelay(20);
+      osDelay(2000);
   }
   /* USER CODE END 5 */
 }

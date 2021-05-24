@@ -66,8 +66,8 @@ void Error_Handler(void);
 #define SPI_LPS_MISO_GPIO_Port GPIOC
 #define SPI_LPS_MOSI_Pin GPIO_PIN_3
 #define SPI_LPS_MOSI_GPIO_Port GPIOC
-#define BEEPER_Pin GPIO_PIN_0
-#define BEEPER_GPIO_Port GPIOA
+#define BUZZER_Pin GPIO_PIN_0
+#define BUZZER_GPIO_Port GPIOA
 #define DEBUG_OUT_3_Pin GPIO_PIN_1
 #define DEBUG_OUT_3_GPIO_Port GPIOA
 #define DEBUG_OUT_2_Pin GPIO_PIN_2
