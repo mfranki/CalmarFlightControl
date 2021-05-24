@@ -26,6 +26,7 @@
                           PRIVATE DEFINES / MACROS
 *****************************************************************************/
 
+/** rings buzzer according to ERROR_INDEX **/
 #define INITIALIZATION_FAIL_LOOP(ERROR_INDEX) while(1)                                                                          \
                                               {                                                                                 \
                                                   SoundNotificationsPlayInBlockingMode(SN_INITIALIZATION_ERROR);                \
@@ -37,9 +38,7 @@
                                               }
 
 enum{
-    INIT_LOOP_NULL_GUARDS = 1,
-    INIT_LOOP_BUZZER,
-    INIT_LOOP_BMX,
+    INIT_LOOP_BMX = 1,
     INIT_LOOP_UART,
     INIT_LOOP_ADC,
     INIT_LOOP_BATTERY_STATUS,
@@ -56,6 +55,9 @@ enum{
                          PRIVATE FUNCTION DECLARATION
 *****************************************************************************/
 
+/**@brief device manager task
+ *
+ */
 static void DeviceManagerTask();
 
 /*****************************************************************************
@@ -72,13 +74,13 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
        timBuzzerHandle == NULL ||
        uartDebugHandle == NULL)
     {
-        INITIALIZATION_FAIL_LOOP(INIT_LOOP_NULL_GUARDS)
+        while(1){}
     }
 
     UtilsInit();
     if(!BuzzerInit(timBuzzerHandle, TIM_CHANNEL_1))
     {
-        INITIALIZATION_FAIL_LOOP(INIT_LOOP_BUZZER)
+        while(1){}
     }
     if(!Bmx055Init(spiBMXHandle))
     {

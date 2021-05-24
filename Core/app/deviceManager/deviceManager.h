@@ -23,6 +23,13 @@
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
 
+/**@brief initializes device
+ *
+ * @param [in] adcHandle
+ * @param [in] spiBMXHandle
+ * @param [in] timBuzzerHandle
+ * @param [in] uartDebugHandle
+ */
 void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
                        SPI_HandleTypeDef* spiBMXHandle,
                        TIM_HandleTypeDef* timBuzzerHandle,
