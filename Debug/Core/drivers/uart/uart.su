@@ -1,2 +1,0 @@
-uart.c:44:6:UartInit	16	static
-uart.c:50:6:UartWrite	128	static
