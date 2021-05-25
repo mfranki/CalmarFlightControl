@@ -16,6 +16,8 @@
 *****************************************************************************/
 
 typedef enum{
+    SN_ASSERT,
+
     SN_INITIALIZATION_ERROR,
     SN_INITIALIZATION_ERROR_INDEX,
 

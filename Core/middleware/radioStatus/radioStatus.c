@@ -1,36 +1,28 @@
 /*****************************************************************************
- * @file /CalmarFlightController/Core/drivers/radio/radio.c
+ * @file /CalmarFlightController/Core/middleware/radioStatus/radioStatus.c
  *
- * @brief Source code file template
+ * @brief Source code
  * 
  * @author Michal Frankiewicz
- * @date Apr 25, 2021
+ * @date May 24, 2021
  ****************************************************************************/
 
-#include "drivers/radio/radio.h"
+#include "middleware/radioStatus/radioStatus.h"
 #include "drivers/utils/utils.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-#include <limits.h>
+#include "cmsis_os.h"
 
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
 *****************************************************************************/
 
-#define PWM_MAX_UP_TIME_S (0.002f)  ///< [s], 50Hz PWM -> 2ms == 10% duty cycle
-#define PWM_MIN_UP_TIME_S (0.001f)  ///< [s], 50Hz PWM -> 1ms == 5% duty cycle
+
 
 /*****************************************************************************
                      PRIVATE STRUCTS / ENUMS / VARIABLES
 *****************************************************************************/
 
-static uint32_t channelStateChangeTime[RADIO_CHANNEL_COUNT] = {0,0,0,0,0,0};
-
-/** @brief keeps channel data in range   0..1 **/
-static float channelData[RADIO_CHANNEL_COUNT] = {0,0,0,0,0,0};
-
+static float radioChannelCurrentData[RADIO_CHANNEL_COUNT] = {0,0,0,0,0,0};
 static bool radioSignalAvailable = false;
 
 /*****************************************************************************
@@ -43,33 +35,39 @@ static bool radioSignalAvailable = false;
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
 
-void RadioIrq(radioChannel_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+void RadioStatusTask()
 {
-    if(channel >= RADIO_CHANNEL_COUNT)
+    while(1)
     {
-        return;
+        bool allRadioChannelsAvailable = true;
+        for(radioChannel_t channel=RADIO_CHANNEL_1; channel<RADIO_CHANNEL_COUNT; channel++)
+        {
+            radioChannelData_t data = RadioGetChannelData(channel);
+            if(GetTimeElapsed(&(data.lastUpdateTime), false) > RADIO_STATUS_MAX_DOWN_TIME_S)
+            {
+                radioChannelCurrentData[channel] = 0;
+                allRadioChannelsAvailable = false;
+            } else {
+                radioChannelCurrentData[channel] = data.channelData;
+            }
+        }
+
+        radioSignalAvailable = allRadioChannelsAvailable;
+
+        osDelay(20);
     }
-
-    float timeElapsed = GetTimeElapsed(&channelStateChangeTime[channel], true);
-
-    if(0 == HAL_GPIO_ReadPin(GPIOx,GPIO_Pin))
-    {
-        channelData[channel] = (timeElapsed-PWM_MIN_UP_TIME_S)/(PWM_MAX_UP_TIME_S-PWM_MIN_UP_TIME_S);
-    }
-
-    radioSignalAvailable = true;
 }
 
-radioChannelData_t RadioGetChannelData(radioChannel_t channel)
+float RadioStatusGetChannelData(radioChannel_t channel)
 {
     ASSERT(channel < RADIO_CHANNEL_COUNT)
 
-    radioChannelData_t data = {
-            .channelData = channelData[channel],
-            .lastUpdateTime = channelStateChangeTime[channel]
-    };
+    return radioChannelCurrentData[channel];
+}
 
-    return data;
+bool RadioStatusGetConnectionStatus()
+{
+    return radioSignalAvailable;
 }
 
 /******************************************************************************

@@ -34,6 +34,11 @@ typedef struct{
 
 /** notifications tones **/
 static const soundData_t notifications[] = {
+    {                           ///<     SN_ASSERT
+        .size = 2,
+        .samples = {{3000 , 500},
+                    {40000, 500}}
+    },
     {                           ///< SN_INITIALIZATION_ERROR,
         .size = 2,
         .samples = {{2000 , 200},

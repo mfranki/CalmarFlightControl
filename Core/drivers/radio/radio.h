@@ -26,6 +26,11 @@ typedef enum{
     RADIO_CHANNEL_COUNT
 }radioChannel_t;
 
+typedef struct{
+    float channelData;
+    uint32_t lastUpdateTime;
+}radioChannelData_t;
+
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
@@ -39,6 +44,11 @@ typedef enum{
  */
 void RadioIrq(radioChannel_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 
-/**@brief freertos radio task
+/**@brief getter for radio channel data and last update time
+ *        asserts if channel is invalid
+ *
+ * @param [in] channel
+ * @return radio channel data and last update time
  */
-void RadioTask();
+radioChannelData_t RadioGetChannelData(radioChannel_t channel);
+

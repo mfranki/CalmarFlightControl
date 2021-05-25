@@ -22,6 +22,7 @@
 #include "middleware/batteryStatus/batteryStatus.h"
 #include "middleware/mahonyFilter/mahonyFilter.h"
 #include "middleware/soundNotifications/soundNotifications.h"
+#include "middleware/radioStatus/radioStatus.h"
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
 *****************************************************************************/
@@ -63,7 +64,7 @@ static void DeviceManagerTask();
 /*****************************************************************************
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
-
+#include <stdio.h>
 void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
                        SPI_HandleTypeDef* spiBMXHandle,
                        TIM_HandleTypeDef* timBuzzerHandle,
@@ -109,16 +110,16 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     osThreadDef(soundNotificationTask, SoundNotificationTask, osPriorityNormal, 0, 100);
     osThreadCreate(osThread(soundNotificationTask), NULL);
 
-    osThreadDef(radioTask, RadioTask, osPriorityNormal, 0, 100);
-    osThreadCreate(osThread(radioTask), NULL);
+    osThreadDef(radioStatusTask, RadioStatusTask, osPriorityNormal, 0, 100);
+    osThreadCreate(osThread(radioStatusTask), NULL);
 /*
     osThreadDef(batteryStatusTask, BatteryStatusTask, osPriorityNormal, 0, 100);
     osThreadCreate(osThread(batteryStatusTask), NULL);*/
 
-    osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 300);
+    osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 100);
     osThreadCreate(osThread(mahonyFilterTask), NULL);
 
-    osThreadDef(deviceManagerTask, DeviceManagerTask, osPriorityNormal, 0, 100);
+    osThreadDef(deviceManagerTask, DeviceManagerTask, osPriorityNormal, 0, 300);
     osThreadCreate(osThread(deviceManagerTask), NULL);
 
 
@@ -129,7 +130,15 @@ static void DeviceManagerTask()
 {
     while(1)
     {
-        osDelay(10);
+
+        UartWrite("%f\t%f\t%f\t%f\t%f\t%f\r\n",RadioStatusGetChannelData(RADIO_CHANNEL_1),
+                                               RadioStatusGetChannelData(RADIO_CHANNEL_2),
+                                               RadioStatusGetChannelData(RADIO_CHANNEL_3),
+                                               RadioStatusGetChannelData(RADIO_CHANNEL_4),
+                                               RadioStatusGetChannelData(RADIO_CHANNEL_5),
+                                               RadioStatusGetChannelData(RADIO_CHANNEL_6));
+
+        osDelay(20);
     }
 }
 
