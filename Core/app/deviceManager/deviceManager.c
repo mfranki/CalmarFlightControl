@@ -64,7 +64,7 @@ static void DeviceManagerTask();
 /*****************************************************************************
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
-#include <stdio.h>
+
 void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
                        SPI_HandleTypeDef* spiBMXHandle,
                        TIM_HandleTypeDef* timBuzzerHandle,
@@ -119,7 +119,7 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 100);
     osThreadCreate(osThread(mahonyFilterTask), NULL);
 
-    osThreadDef(deviceManagerTask, DeviceManagerTask, osPriorityNormal, 0, 300);
+    osThreadDef(deviceManagerTask, DeviceManagerTask, osPriorityNormal, 0, 200);
     osThreadCreate(osThread(deviceManagerTask), NULL);
 
 
