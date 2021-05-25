@@ -1,42 +1,42 @@
 /*****************************************************************************
- * @file /CALMAR/Core/driver/uart/uart.h
+ * @file /CalmarFlightController/Core/middleware/radioStatus/radioStatus.h
  *
- * @brief 
+ * @brief Header file 
  * 
  * @author Michal Frankiewicz
- * @date May 5, 2020
- *
+ * @date May 24, 2021
  ****************************************************************************/
 #pragma once 
 
-#include "main.h"
-
 #include <stdbool.h>
 #include <stdint.h>
+
+#include "drivers/radio/radio.h"
 
 /*****************************************************************************
                        PUBLIC DEFINES / MACROS / ENUMS
 *****************************************************************************/
 
-#ifndef UART_MAX_MESSAGE_SIZE
-#define UART_MAX_MESSAGE_SIZE 100
-#endif
+#define RADIO_STATUS_MAX_DOWN_TIME_S (1.0f)  ///< [s]
 
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
 
-/**@brief initializes uart
- *
- * @param [in] uh - handle to uart periph
- * @return true if success
+/**@brief freertos task
  */
-bool UartInit(UART_HandleTypeDef *uh);
+void RadioStatusTask();
 
-/**@brief writes data to uart, formatting the same as in printf
+/**@brief getter for current radio data
  *
- * @param format
- * @return true if success
+ * @param [in] channel
+ * @return channel data, if no radio connection then 0
  */
-bool UartWrite(char *format, ...);
+float RadioStatusGetChannelData(radioChannel_t channel);
 
+/**@brief getter for radio connection status
+ *        if radio data is not avalable for RADIO_STATUS_MAX_DOWN_TIME_S
+ *        radio status is assumed disconnected
+ * @return true if radio connected
+ */
+bool RadioStatusGetConnectionStatus();

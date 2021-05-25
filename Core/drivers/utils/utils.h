@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "middleware/soundNotifications/soundNotifications.h"
+
 /*****************************************************************************
                        PUBLIC DEFINES / MACROS / ENUMS
 *****************************************************************************/
@@ -24,6 +26,7 @@
                                                {                           \
                                                    return _RETURN_VALUE_;  \
                                                }
+#define ASSERT(_CONDITION_) if(!(_CONDITION_)){while(1){SoundNotificationsPlayInBlockingMode(SN_ASSERT);}}
 
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION

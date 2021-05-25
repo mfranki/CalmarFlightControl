@@ -76,12 +76,11 @@ void MahonyFilterTask()
 
     while(1)
     {
-        HAL_GPIO_WritePin(DEBUG_OUT_1_GPIO_Port,DEBUG_OUT_1_Pin,1);
         Bmx055GetData(&data);
 
 
         posY += data.gy*0.001;
-        UartWrite("%f\t%f\t%f\r\n",data.gy,posY);
+        //UartWrite("%f\t%f\t%f\r\n",data.gy,posY);
 //        UartWrite("%f\t%f\t%f\r\n",data.gx,data.gy,data.gz);
 
 
@@ -95,8 +94,6 @@ void MahonyFilterTask()
         DigitalFilterProcess(magFilterHandle[2], data.mz, &filteredData.mz);
 
 
-
-        HAL_GPIO_WritePin(DEBUG_OUT_1_GPIO_Port,DEBUG_OUT_1_Pin,0);
         vTaskDelayUntil(&lastTickTime,1);
     }
 }
