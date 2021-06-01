@@ -236,12 +236,27 @@ static bmxParam_t bmxParams[MODULE_COUNT] = {
         {CS_MAG_Pin,CS_MAG_GPIO_Port,MAG_MIN_ADDRESS,MAG_MAX_ADDRESS}};
 
 
-static float magXOffset = -24.8574;
-static float magYOffset = 40.3328;
-static float magZOffset = -111.517;
+static float accXOffset = 0;
+static float accYOffset = 0;
+static float accZOffset = 0;
+
+static float gyroXOffset = 0;
+static float gyroYOffset = 0;
+static float gyroZOffset = 0;
+/*
+static float magXOffset = -24.8574*0.3;
+static float magYOffset = 40.3328*0.3;
+static float magZOffset = -111.517*0.3;
 static float magXScale = 0.9490;
 static float magYScale = 0.9161;
-static float magZScale = 1.0635;
+static float magZScale = 1.0635;*/
+
+static float magXOffset = 0;
+static float magYOffset = 0;
+static float magZOffset = 0;
+static float magXScale = 1;
+static float magYScale = 1;
+static float magZScale = 1;
 
 static float accResolution = ACC_PMU_RESOLUTION_2G;
 static float gyroResolution =  GYRO_RESOLUTION_2000_DEG;
@@ -325,19 +340,20 @@ bool Bmx055Init(SPI_HandleTypeDef *HSPI)
     {
         return false;
     }
-
+/*
 
     uint8_t data[19];
     for(uint8_t address=0x40,i=0; address<0x53; address++,i++)
     {
         ReadAddress(MAG, address, &data[i]);
     }
-
+*/
     return true;
 }
 
 bool Bmx055GetData(bmx055Data_t* data)
 {
+
     static uint8_t accRaw[6];  ///< x, y, z: lsb, msb = 3*2=6 bytes
 
     if(!ReadBurst(ACC, ACC_ACCD_X_LSB, accRaw, 6))
@@ -349,9 +365,9 @@ bool Bmx055GetData(bmx055Data_t* data)
     int16_t axRaw = ((int16_t) accRaw[1])<<4 | ((int16_t) accRaw[0])>>4;
     int16_t ayRaw = ((int16_t) accRaw[3])<<4 | ((int16_t) accRaw[2])>>4;
     int16_t azRaw = ((int16_t) accRaw[5])<<4 | ((int16_t) accRaw[4])>>4;
-    data->ax = (float)((axRaw&0x7ff)-(axRaw&0x800))*accResolution;
-    data->ay = (float)((ayRaw&0x7ff)-(ayRaw&0x800))*accResolution;
-    data->az = (float)((azRaw&0x7ff)-(azRaw&0x800))*accResolution;
+    data->ax = (float)((axRaw&0x7ff)-(axRaw&0x800))*accResolution-accXOffset;
+    data->ay = (float)((ayRaw&0x7ff)-(ayRaw&0x800))*accResolution-accYOffset;
+    data->az = (float)((azRaw&0x7ff)-(azRaw&0x800))*accResolution-accZOffset;
 
     static uint8_t gyroRaw[6]; ///< x, y, z: lsb, msb = 3*2=6 bytes
 
@@ -360,9 +376,9 @@ bool Bmx055GetData(bmx055Data_t* data)
         return false;
     }
     /**combine bits together**/
-    data->gx = (float)((int16_t)(((int16_t) gyroRaw[0])<<8 | ((int16_t) gyroRaw[1])))*gyroResolution;
-    data->gy = (float)((int16_t)(((int16_t) gyroRaw[2])<<8 | ((int16_t) gyroRaw[3])))*gyroResolution;
-    data->gz = (float)((int16_t)(((int16_t) gyroRaw[4])<<8 | ((int16_t) gyroRaw[5])))*gyroResolution;
+    data->gx = (float)((int16_t)(((int16_t) gyroRaw[0])<<8 | ((int16_t) gyroRaw[1])))*gyroResolution-gyroXOffset;
+    data->gy = (float)((int16_t)(((int16_t) gyroRaw[2])<<8 | ((int16_t) gyroRaw[3])))*gyroResolution-gyroYOffset;
+    data->gz = (float)((int16_t)(((int16_t) gyroRaw[4])<<8 | ((int16_t) gyroRaw[5])))*gyroResolution-gyroZOffset;
 
     //UartWrite("%f\t%f\t%f\r\n",data->gx,data->gy,data->gz);
 
@@ -384,13 +400,9 @@ bool Bmx055GetData(bmx055Data_t* data)
     data->my = (float)((myRaw&0xfff)-(myRaw&0x1000));
     data->mz = (float)((mzRaw&0x3fff)-(mzRaw&0x4000));
     /**compensate for offsets and sensitivity**/
-    data->mx = (data->mx-magXOffset)*magResolution*magXScale;
-    data->my = (data->my-magYOffset)*magResolution*magYScale;
-    data->mz = (data->mz-magZOffset)*magResolution*magZScale;
-/*
-    UartWrite("%f\t%f\t%f\r\n",atan2(data->my,data->mx)*180/3.141,
-    atan2(data->ax,data->az)*180/3.141,
-    atan2(data->ay,data->az)*180/3.141);*/
+    data->mx = (data->mx*magResolution-magXOffset)*magXScale;
+    data->my = (data->my*magResolution-magYOffset)*magYScale;
+    data->mz = (data->mz*magResolution-magZOffset)*magZScale;
 
     return true;
 }
@@ -488,14 +500,32 @@ bool BMX055CalibrateAccGyro()
     return true;
 }
 
-bool BMX055CalibrateMag()
-{/*
-    minX = data->mx<minX ? data->mx : minX;
-    maxX = data->mx>maxX ? data->mx : maxX;
-    minY = data->my<minY ? data->my : minY;
-    maxY = data->my>maxY ? data->my : maxY;
-    minZ = data->mz<minZ ? data->mz : minZ;
-    maxZ = data->mz>maxZ ? data->mz : maxZ;*/
+void Bmx055SetAccOffsets(float x, float y, float z)
+{
+    accXOffset = x;
+    accYOffset = y;
+    accZOffset = z;
+}
+
+void Bmx055SetGyroOffsets(float x, float y, float z)
+{
+    gyroXOffset = x;
+    gyroYOffset = y;
+    gyroZOffset = z;
+}
+
+void Bmx055SetMagOffsets(float x, float y, float z)
+{
+    magXOffset = x;
+    magYOffset = y;
+    magZOffset = z;
+}
+
+void Bmx055SetMagSensitivity(float x, float y, float z)
+{
+    magXScale = x;
+    magYScale = y;
+    magZScale = z;
 }
 
 /******************************************************************************
@@ -668,6 +698,8 @@ static bool CheckConnection()
     {
         return false;
     }
+
+    HAL_Delay(10);  ///< wait for the magnetometer to power up
 
     chipID = 0x00;
     if(!ReadAddress(MAG, MAG_CHIP_ID, &chipID))

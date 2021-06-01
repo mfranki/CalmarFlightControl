@@ -39,8 +39,8 @@
                                               }
 
 enum{
-    INIT_LOOP_BMX = 1,
-    INIT_LOOP_UART,
+    INIT_LOOP_UART = 1,
+    INIT_LOOP_BMX,
     INIT_LOOP_ADC,
     INIT_LOOP_BATTERY_STATUS,
     INIT_LOOP_MAHONY_FILTER
@@ -83,22 +83,22 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     {
         while(1){}
     }
-    if(!Bmx055Init(spiBMXHandle))
-    {
-        INITIALIZATION_FAIL_LOOP(INIT_LOOP_BMX)
-    }
     if(!UartInit(uartDebugHandle))
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_UART)
+    }
+    if(!Bmx055Init(spiBMXHandle))
+    {
+        INITIALIZATION_FAIL_LOOP(INIT_LOOP_BMX)
     }
     if(!AdcInit(adcHandle))
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_ADC)
     }
-    /*if(!BatteryStatusInit())
+    if(!BatteryStatusInit())
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_BATTERY_STATUS)
-    }*/
+    }
     if(!MahonyFilterInit())
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_MAHONY_FILTER)
@@ -112,9 +112,9 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
 
     osThreadDef(radioStatusTask, RadioStatusTask, osPriorityNormal, 0, 100);
     osThreadCreate(osThread(radioStatusTask), NULL);
-/*
+
     osThreadDef(batteryStatusTask, BatteryStatusTask, osPriorityNormal, 0, 100);
-    osThreadCreate(osThread(batteryStatusTask), NULL);*/
+    osThreadCreate(osThread(batteryStatusTask), NULL);
 
     osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 100);
     osThreadCreate(osThread(mahonyFilterTask), NULL);
@@ -130,14 +130,14 @@ static void DeviceManagerTask()
 {
     while(1)
     {
-
+/*
         UartWrite("%f\t%f\t%f\t%f\t%f\t%f\r\n",RadioStatusGetChannelData(RADIO_CHANNEL_1),
                                                RadioStatusGetChannelData(RADIO_CHANNEL_2),
                                                RadioStatusGetChannelData(RADIO_CHANNEL_3),
                                                RadioStatusGetChannelData(RADIO_CHANNEL_4),
                                                RadioStatusGetChannelData(RADIO_CHANNEL_5),
                                                RadioStatusGetChannelData(RADIO_CHANNEL_6));
-
+*/
         osDelay(20);
     }
 }
