@@ -317,6 +317,11 @@ bool Bmx055Init(SPI_HandleTypeDef *HSPI)
         return false;
     }
 
+    if(!SetGyroRange(GYRO_RANGE_DEFAULT))
+    {
+        return false;
+    }
+
     /** SETUP MAG **/
 
     if(!WriteAddress(MAG, MAG_OPMODE, MAG_OPMODE_DATARATE_30HZ |
@@ -342,10 +347,10 @@ bool Bmx055Init(SPI_HandleTypeDef *HSPI)
     }
 /*
 
-    uint8_t data[19];
-    for(uint8_t address=0x40,i=0; address<0x53; address++,i++)
+    uint8_t data[0x3E];
+    for(uint8_t address=0x00,i=0; address<0x3E; address++,i++)
     {
-        ReadAddress(MAG, address, &data[i]);
+        ReadAddress(GYRO, address, &data[i]);
     }
 */
     return true;
@@ -362,12 +367,12 @@ bool Bmx055GetData(bmx055Data_t* data)
     }
 
     /**combine bits together**/
-    int16_t axRaw = ((int16_t) accRaw[1])<<4 | ((int16_t) accRaw[0])>>4;
-    int16_t ayRaw = ((int16_t) accRaw[3])<<4 | ((int16_t) accRaw[2])>>4;
+    int16_t axRaw = ((int16_t) accRaw[3])<<4 | ((int16_t) accRaw[2])>>4;
+    int16_t ayRaw = ((int16_t) accRaw[1])<<4 | ((int16_t) accRaw[0])>>4;
     int16_t azRaw = ((int16_t) accRaw[5])<<4 | ((int16_t) accRaw[4])>>4;
-    data->ax = (float)((axRaw&0x7ff)-(axRaw&0x800))*accResolution-accXOffset;
+    data->ax = -(float)((axRaw&0x7ff)-(axRaw&0x800))*accResolution-accXOffset;
     data->ay = (float)((ayRaw&0x7ff)-(ayRaw&0x800))*accResolution-accYOffset;
-    data->az = (float)((azRaw&0x7ff)-(azRaw&0x800))*accResolution-accZOffset;
+    data->az = -(float)((azRaw&0x7ff)-(azRaw&0x800))*accResolution-accZOffset;
 
     static uint8_t gyroRaw[6]; ///< x, y, z: lsb, msb = 3*2=6 bytes
 
@@ -376,11 +381,10 @@ bool Bmx055GetData(bmx055Data_t* data)
         return false;
     }
     /**combine bits together**/
-    data->gx = (float)((int16_t)(((int16_t) gyroRaw[0])<<8 | ((int16_t) gyroRaw[1])))*gyroResolution-gyroXOffset;
-    data->gy = (float)((int16_t)(((int16_t) gyroRaw[2])<<8 | ((int16_t) gyroRaw[3])))*gyroResolution-gyroYOffset;
-    data->gz = (float)((int16_t)(((int16_t) gyroRaw[4])<<8 | ((int16_t) gyroRaw[5])))*gyroResolution-gyroZOffset;
-
-    //UartWrite("%f\t%f\t%f\r\n",data->gx,data->gy,data->gz);
+    data->gx = (float)((int16_t)(((int16_t) gyroRaw[4])<<8 | ((int16_t) gyroRaw[5])))*gyroResolution-gyroXOffset;
+    data->gy = -(float)((int16_t)(((int16_t) gyroRaw[2])<<8 | ((int16_t) gyroRaw[3])))*gyroResolution-gyroYOffset;
+    data->gz = 0; ///< z axis broken
+    ///data->gz = (float)((int16_t)(((int16_t) gyroRaw[0])<<8 | ((int16_t) gyroRaw[1])))*gyroResolution-gyroZOffset;
 
     static uint8_t magRaw[6]; ///< x, y, z: lsb, msb = 3*2=6 bytes
 

@@ -116,7 +116,7 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     osThreadDef(batteryStatusTask, BatteryStatusTask, osPriorityNormal, 0, 100);
     osThreadCreate(osThread(batteryStatusTask), NULL);
 
-    osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 100);
+    osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 300);
     osThreadCreate(osThread(mahonyFilterTask), NULL);
 
     osThreadDef(deviceManagerTask, DeviceManagerTask, osPriorityNormal, 0, 200);
@@ -125,9 +125,11 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
 
 
 }
-
+#include <math.h>
 static void DeviceManagerTask()
-{
+{MahonyFilterUseMagnetometer(false);
+ //BMX055CalibrateAccGyro();
+
     while(1)
     {
 /*
@@ -138,7 +140,13 @@ static void DeviceManagerTask()
                                                RadioStatusGetChannelData(RADIO_CHANNEL_5),
                                                RadioStatusGetChannelData(RADIO_CHANNEL_6));
 */
-        osDelay(20);
+
+        quaternion_t q = MahonyFilterGetPosition();
+        float angle = atan2(VectorLength(q.v),q.w)*2;
+        vector_t v = VectorMultiply(VectorNorm(q.v),angle*180/M_PI);
+      //  HAL_GPIO_WritePin(DEBUG_OUT_1_GPIO_Port,DEBUG_OUT_1_Pin,1);
+        UartWrite("%f\t%f\t%f\r\n",v.x,v.y,v.z);
+        osDelay(10);
     }
 }
 
