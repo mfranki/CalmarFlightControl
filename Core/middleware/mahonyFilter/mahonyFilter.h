@@ -11,6 +11,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "middleware/vector/vector.h"
+#include "middleware/quaternion/quaternion.h"
+
 /*****************************************************************************
                        PUBLIC DEFINES / MACROS / ENUMS
 *****************************************************************************/
@@ -21,6 +24,31 @@
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
 
-bool MahonyFilterInit();
-
+/**@brief mahony filter task
+ */
 void MahonyFilterTask();
+
+/**@brief sets reference position mag field vector,
+ *        calculates mag vector part perpendicular to current acc initial vector
+ *        and sets it as reference mag vector
+ * @param [in] magVector
+ */
+void MahonyFilterSetInitialMagVector(vector_t magVector);
+
+/**@brief sets acc reference vector
+ *
+ * @param [in] accVector
+ */
+void MahonyFilterSetInitialAccVector(vector_t accVector);
+
+/**@brief enables magnetometer data to be used in filter measurements
+ *
+ * @param [in] useMag - if true mag data is used in filter calculations
+ */
+void MahonyFilterUseMagnetometer(bool useMag);
+
+/**@brief getter for filtered position
+ *
+ * @return position
+ */
+quaternion_t MahonyFilterGetPosition();

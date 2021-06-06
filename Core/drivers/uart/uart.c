@@ -44,8 +44,9 @@ static const char messageTooLongErrMsg[] = "Message too long\r\n";
  * @param [in] d
  * @param [out] wholes
  * @param [out] parts
+ * @param [out] bellow_0 - true when d<0
  */
-void DoubleToTwoInts(double d, int32_t* wholes, uint32_t* parts);
+void DoubleToTwoInts(double d, uint32_t* wholes, uint32_t* parts, bool *bellow_0);
 
 /**@brief flips given array back to front
  *
@@ -135,14 +136,16 @@ bool UartWrite(char *format, ...)
                         PRIVATE FUNCTION IMPLEMENTATION
 ******************************************************************************/
 
-void DoubleToTwoInts(double d, int32_t* wholes, uint32_t* parts)
+void DoubleToTwoInts(double d, uint32_t* wholes, uint32_t* parts, bool *bellow_0)
 {
     if(wholes == NULL || parts == NULL)
     {
         return;
     }
-    *wholes = (int32_t)d;
-    *parts = abs((d-((double)(*wholes)))*PRECISION_MULTIPLICATOR);
+    *bellow_0 = d<0;
+
+    *wholes = (uint32_t)abs((int32_t)d);
+    *parts = abs((d-(((double)!bellow_0*2-1)*(double)(*wholes)))*PRECISION_MULTIPLICATOR);
 }
 
 void MirrorCharArray(char array[], uint32_t elementCount)
@@ -257,11 +260,12 @@ uint32_t Vsprintf(char buffer[], char format[], va_list args)
 
         if(prevSign == '%')
         {
-            int32_t wholes = 0;
+            uint32_t wholes = 0;
             uint32_t parts = 0;
             int32_t I = 0;
             uint32_t U = 0;
             double D = 0;
+            bool bellow_0 = false;
 
             switch(format[i])
             {
@@ -275,8 +279,13 @@ uint32_t Vsprintf(char buffer[], char format[], va_list args)
                 break;
             case 'f':
                 D = va_arg(args,double);
-                DoubleToTwoInts(D, &wholes, &parts);
-                character += IntToCharArray(wholes,&buffer[character]);
+                DoubleToTwoInts(D, &wholes, &parts, &bellow_0);
+                if(bellow_0)
+                {
+                        buffer[character] = '-';
+                        character++;
+                }
+                character += UintToCharArray(wholes,&buffer[character],1);
                 buffer[character] = '.';
                 character++;
                 character += UintToCharArray(parts,&buffer[character],PRECISION_SIGNIFICANT_DIGITS);
