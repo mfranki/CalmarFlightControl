@@ -17,7 +17,14 @@
                        PUBLIC DEFINES / MACROS / ENUMS
 *****************************************************************************/
 
-
+typedef enum{
+    DEVICE_INITIALIZATION,  /// 0
+    DEVICE_STANDBY,         /// 1
+    DEVICE_CALIBRATION,     /// 2
+    DEVICE_SETTINGS,        /// 3
+    DEVICE_FLIGHT,          /// 4
+    DEVICE_HOMING           /// 5
+}deviceOperatingModes_t;
 
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION
@@ -35,3 +42,5 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
                        TIM_HandleTypeDef* timBuzzerHandle,
                        UART_HandleTypeDef* uartDebugHandle);
 
+
+deviceOperatingModes_t DeviceManagerGetOperatingMode();

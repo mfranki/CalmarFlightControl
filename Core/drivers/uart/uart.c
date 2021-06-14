@@ -145,7 +145,7 @@ void DoubleToTwoInts(double d, uint32_t* wholes, uint32_t* parts, bool *bellow_0
     *bellow_0 = d<0;
 
     *wholes = (uint32_t)abs((int32_t)d);
-    *parts = abs((d-(((double)!bellow_0*2-1)*(double)(*wholes)))*PRECISION_MULTIPLICATOR);
+    *parts = abs((d-(((double)!*bellow_0*2-1)*(double)(*wholes)))*PRECISION_MULTIPLICATOR);
 }
 
 void MirrorCharArray(char array[], uint32_t elementCount)

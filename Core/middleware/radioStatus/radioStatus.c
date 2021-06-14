@@ -7,6 +7,8 @@
  * @date May 24, 2021
  ****************************************************************************/
 
+#include "app/deviceManager/deviceManager.h"
+
 #include "middleware/radioStatus/radioStatus.h"
 #include "drivers/utils/utils.h"
 
@@ -50,6 +52,32 @@ void RadioStatusTask()
             } else {
                 radioChannelCurrentData[channel] = data.channelData;
             }
+
+            if(DeviceManagerGetOperatingMode() == DEVICE_INITIALIZATION ||
+               DeviceManagerGetOperatingMode() == DEVICE_HOMING)
+            {
+                radioChannelCurrentData[channel] = 0;
+            }
+
+            if(DeviceManagerGetOperatingMode() == DEVICE_CALIBRATION &&
+               channel != RADIO_SWITCH_CHANNEL)
+            {
+                radioChannelCurrentData[channel] = 0;
+            }
+
+            if(DeviceManagerGetOperatingMode() == DEVICE_SETTINGS &&
+               channel != RADIO_SWITCH_CHANNEL &&
+               channel != RADIO_DIAL_CHANNEL)
+            {
+                radioChannelCurrentData[channel] = 0;
+            }
+
+            if(DeviceManagerGetOperatingMode() == DEVICE_FLIGHT &&
+               channel == RADIO_SWITCH_CHANNEL &&
+               channel == RADIO_DIAL_CHANNEL)
+            {
+                radioChannelCurrentData[channel] = 0;
+            }
         }
 
         radioSignalAvailable = allRadioChannelsAvailable;
@@ -69,6 +97,14 @@ bool RadioStatusGetConnectionStatus()
 {
     return radioSignalAvailable;
 }
+
+void RadioStatusSetCalibrationMode(bool enableCalibrationMode)
+{
+
+}
+
+
+void RadioStatusSetSettingsMode(bool enableSettingsMode);
 
 /******************************************************************************
                         PRIVATE FUNCTION IMPLEMENTATION

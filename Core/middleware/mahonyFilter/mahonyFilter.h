@@ -47,8 +47,9 @@ void MahonyFilterSetInitialAccVector(vector_t accVector);
  */
 void MahonyFilterUseMagnetometer(bool useMag);
 
-/**@brief getter for filtered position
+/**@brief getter for filtered orientation
  *
  * @return position
  */
-quaternion_t MahonyFilterGetPosition();
+quaternion_t MahonyFilterGetOrientation();
+

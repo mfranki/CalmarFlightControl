@@ -114,7 +114,9 @@ quaternion_t QuatNorm(quaternion_t q)
 
 vector_t QuatTranslateToRotationVector(quaternion_t q)
 {
-    float angle = atan2(VectorLength(q.v),q.w)*2;
+    float w = q.w == 0 ? 0.000000001 : q.w;
+
+    float angle = atan(VectorLength(q.v)/w)*2;
     return VectorMultiply(VectorNorm(q.v),angle);
 }
 

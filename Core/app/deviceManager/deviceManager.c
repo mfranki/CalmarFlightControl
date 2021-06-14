@@ -23,6 +23,9 @@
 #include "middleware/mahonyFilter/mahonyFilter.h"
 #include "middleware/soundNotifications/soundNotifications.h"
 #include "middleware/radioStatus/radioStatus.h"
+#include "middleware/remoteSettings/remoteSettings.h"
+#include "middleware/IMU/IMU.h"
+
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
 *****************************************************************************/
@@ -42,14 +45,32 @@ enum{
     INIT_LOOP_UART = 1,
     INIT_LOOP_BMX,
     INIT_LOOP_ADC,
-    INIT_LOOP_BATTERY_STATUS
+    INIT_LOOP_BATTERY_STATUS,
+    INIT_LOOP_IMU
 };
+
+
+
+#define THROTTLE_OFF_TRH (0.05f)
+#define SWITCH_OFF_TRH (0.25f)
+#define FLIGHT_MODE_ZEROS_MAX_COUNT (10U)
+#define HOMING_COUNTER_MAX_COUNT (10U)
 
 /*****************************************************************************
                      PRIVATE STRUCTS / ENUMS / VARIABLES
 *****************************************************************************/
 
+static deviceOperatingModes_t operatingMode = DEVICE_INITIALIZATION;
 
+static struct{
+    TaskHandle_t soundNotificationTask;
+    TaskHandle_t radioStatusTask;
+    TaskHandle_t remoteSettingsTask;
+    TaskHandle_t batteryStatusTask;
+    TaskHandle_t mahonyFilterTask;
+    TaskHandle_t imuTask;
+    TaskHandle_t deviceManagerTask;
+}taskHandles;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION
@@ -99,51 +120,157 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_BATTERY_STATUS)
     }
 
-
     /** CREATE TASKS **/
 
-    osThreadDef(soundNotificationTask, SoundNotificationTask, osPriorityNormal, 0, 100);
-    osThreadCreate(osThread(soundNotificationTask), NULL);
+    xTaskCreate(&SoundNotificationTask, "soundNotificationTask", 100,  NULL, 0, &(taskHandles.soundNotificationTask));
+    xTaskCreate(&RadioStatusTask,       "radioStatusTask",       100,  NULL, 0, &(taskHandles.radioStatusTask      ));
+    xTaskCreate(&RemoteSettingsTask,    "remoteSettingsTask",    100,  NULL, 0, &(taskHandles.remoteSettingsTask   ));
+    xTaskCreate(&BatteryStatusTask,     "batteryStatusTask",     100,  NULL, 0, &(taskHandles.batteryStatusTask    ));
+    xTaskCreate(&MahonyFilterTask,      "mahonyFilterTask",      300,  NULL, 1, &(taskHandles.mahonyFilterTask     ));
+    xTaskCreate(&IMUTask,               "imuTask",               1000, NULL, 0, &(taskHandles.imuTask              ));
+    xTaskCreate(&DeviceManagerTask,     "deviceManagerTask",     200,  NULL, 0, &(taskHandles.deviceManagerTask    ));
 
-    osThreadDef(radioStatusTask, RadioStatusTask, osPriorityNormal, 0, 100);
-    osThreadCreate(osThread(radioStatusTask), NULL);
-
-    osThreadDef(batteryStatusTask, BatteryStatusTask, osPriorityNormal, 0, 100);
-    osThreadCreate(osThread(batteryStatusTask), NULL);
-
-    osThreadDef(mahonyFilterTask, MahonyFilterTask, osPriorityAboveNormal, 0, 200);
-    osThreadCreate(osThread(mahonyFilterTask), NULL);
-
-    osThreadDef(deviceManagerTask, DeviceManagerTask, osPriorityNormal, 0, 200);
-    osThreadCreate(osThread(deviceManagerTask), NULL);
-
-
+    operatingMode = DEVICE_STANDBY;
 
 }
 
-static void DeviceManagerTask()
+deviceOperatingModes_t DeviceManagerGetOperatingMode()
 {
-
-    while(1)
-    {
-/*
-        UartWrite("%f\t%f\t%f\t%f\t%f\t%f\r\n",RadioStatusGetChannelData(RADIO_CHANNEL_1),
-                                               RadioStatusGetChannelData(RADIO_CHANNEL_2),
-                                               RadioStatusGetChannelData(RADIO_CHANNEL_3),
-                                               RadioStatusGetChannelData(RADIO_CHANNEL_4),
-                                               RadioStatusGetChannelData(RADIO_CHANNEL_5),
-                                               RadioStatusGetChannelData(RADIO_CHANNEL_6));
-*/
-
-        quaternion_t q = MahonyFilterGetPosition();
-        vector_t v = VectorMultiply(QuatTranslateToRotationVector(q),180/3.141);
-      //  HAL_GPIO_WritePin(DEBUG_OUT_1_GPIO_Port,DEBUG_OUT_1_Pin,1);
-        UartWrite("%f\t%f\t%f\r\n",v.x,v.y,v.z);
-        osDelay(10);
-    }
+    return operatingMode;
 }
 
 /******************************************************************************
                         PRIVATE FUNCTION IMPLEMENTATION
 ******************************************************************************/
+
+static void DeviceManagerTask()
+{
+    while(1)
+    {
+        /** STANDBY MODE **/
+        if(operatingMode == DEVICE_STANDBY)
+        {
+            if(RadioStatusGetChannelData(RADIO_THROTTLE_CHANNEL) > THROTTLE_OFF_TRH)
+            {
+                operatingMode = DEVICE_FLIGHT;
+                continue;
+            }
+
+            if(RadioStatusGetChannelData(RADIO_SWITCH_CHANNEL) > SWITCH_OFF_TRH)
+            {
+                operatingMode = DEVICE_SETTINGS;
+                continue;
+            }
+        }
+
+        /** SETTINGS_MODE **/
+        if(operatingMode == DEVICE_SETTINGS)
+        {
+            float calibration = 0;
+            RemoteSettingsGetVariable(RS_CALIBRATION, &calibration);
+            if(RadioStatusGetChannelData(RADIO_SWITCH_CHANNEL) < SWITCH_OFF_TRH)
+            {
+                if(calibration<-1 || calibration>1)
+                {
+                    operatingMode = DEVICE_CALIBRATION;
+                    vTaskResume(taskHandles.imuTask);
+
+                    continue;
+                } else  {
+                    operatingMode = DEVICE_STANDBY;
+                    continue;
+                }
+
+            }
+        }
+
+        /** CALIBRATION MODE **/
+        if(operatingMode == DEVICE_CALIBRATION)
+        {
+            if(eSuspended == eTaskGetState(taskHandles.imuTask))
+            {
+                RemoteSettingsSetVariable(RS_CALIBRATION, 0.0f);
+                operatingMode = DEVICE_STANDBY;
+                continue;
+            }
+
+            if(RadioStatusGetChannelData(RADIO_SWITCH_CHANNEL) > SWITCH_OFF_TRH)
+            {
+                RemoteSettingsSetVariable(RS_CALIBRATION, 0.0f);
+                operatingMode = DEVICE_SETTINGS;
+                continue;
+            }
+        }
+
+        /** FLIGHT MODE **/
+        if(operatingMode == DEVICE_FLIGHT)
+        {
+            static uint16_t flightModeZerosCounter = 0;
+
+            if(RadioStatusGetChannelData(RADIO_THROTTLE_CHANNEL) < THROTTLE_OFF_TRH)
+            {
+                if(flightModeZerosCounter++ >= FLIGHT_MODE_ZEROS_MAX_COUNT)
+                {
+                    flightModeZerosCounter = 0;
+                    operatingMode = DEVICE_STANDBY;
+                    continue;
+                }
+            } else {
+                flightModeZerosCounter = 0;
+            }
+
+            if(!RadioStatusGetConnectionStatus())
+            {
+                flightModeZerosCounter = 0;
+                operatingMode = DEVICE_HOMING;
+                continue;
+            }
+        }
+
+        /**HOMING MODE **/
+        if(operatingMode == DEVICE_HOMING)
+        {
+            static uint16_t homingCounter = 0;
+
+            if(0)       ///< check if device reached home position
+            {
+                homingCounter = 0;
+                operatingMode = DEVICE_STANDBY;
+                continue;
+            }
+
+            if(RadioStatusGetConnectionStatus())
+            {
+                if(homingCounter++ >= HOMING_COUNTER_MAX_COUNT)
+                {
+                    homingCounter = 0;
+                    operatingMode = DEVICE_FLIGHT;
+                    continue;
+                }
+            } else {
+                homingCounter = 0;
+            }
+        }
+
+/*
+        quaternion_t q = MahonyFilterGetOrientation();
+        vector_t v = QuatTranslateToRotationVector(q);
+        UartWrite("%f\t%f\t%f\r\n",v.x*180/3.141,v.y*180/3.141,v.z*180/3.141);
+        //UartWrite("%f\t%f\t%f\t%f\r\n",q.w,q.i,q.j,q.k);
+/*
+        bmx055Data_t imuData;
+        Bmx055GetData(&imuData);
+/*        UartWrite("%f\t %f\t %f\t %f\t %f\t %f\t \r\n",imuData.ax,
+                                                       imuData.ay,
+                                                       imuData.az,
+                                                       imuData.gx,
+                                                       imuData.gy,
+                                                       imuData.gz);*/
+  /*      UartWrite("%f\t %f\t %f\t \r\n",imuData.mx,
+                                        imuData.my,
+                                        imuData.mz);
+*/
+        osDelay(100);
+    }
+}
 

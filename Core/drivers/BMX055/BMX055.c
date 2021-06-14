@@ -212,6 +212,8 @@
 
 #define MAG_REP_Z (0x52U)    ///< REGISTER ADDRESS
 
+#define EARTH_GRAVITY_ACC (9.81f)
+
 /*****************************************************************************
                      PRIVATE STRUCTS / ENUMS / VARIABLES
 *****************************************************************************/
@@ -243,6 +245,7 @@ static float accZOffset = 0;
 static float gyroXOffset = 0;
 static float gyroYOffset = 0;
 static float gyroZOffset = 0;
+
 /*
 static float magXOffset = -24.8574*0.3;
 static float magYOffset = 40.3328*0.3;
@@ -370,9 +373,9 @@ bool Bmx055GetData(bmx055Data_t* data)
     int16_t axRaw = ((int16_t) accRaw[3])<<4 | ((int16_t) accRaw[2])>>4;
     int16_t ayRaw = ((int16_t) accRaw[1])<<4 | ((int16_t) accRaw[0])>>4;
     int16_t azRaw = ((int16_t) accRaw[5])<<4 | ((int16_t) accRaw[4])>>4;
-    data->ax = -(float)((axRaw&0x7ff)-(axRaw&0x800))*accResolution-accXOffset;
-    data->ay = (float)((ayRaw&0x7ff)-(ayRaw&0x800))*accResolution-accYOffset;
-    data->az = -(float)((azRaw&0x7ff)-(azRaw&0x800))*accResolution-accZOffset;
+    data->ax = (-(float)((axRaw&0x7ff)-(axRaw&0x800))*accResolution)*EARTH_GRAVITY_ACC-accXOffset;
+    data->ay = ((float)((ayRaw&0x7ff)-(ayRaw&0x800))*accResolution)*EARTH_GRAVITY_ACC-accYOffset;
+    data->az = (-(float)((azRaw&0x7ff)-(azRaw&0x800))*accResolution)*EARTH_GRAVITY_ACC-accZOffset;
 
     static uint8_t gyroRaw[6]; ///< x, y, z: lsb, msb = 3*2=6 bytes
 
@@ -381,10 +384,10 @@ bool Bmx055GetData(bmx055Data_t* data)
         return false;
     }
     /**combine bits together**/
-    data->gx = (float)((int16_t)(((int16_t) gyroRaw[4])<<8 | ((int16_t) gyroRaw[5])))*gyroResolution-gyroXOffset;
-    data->gy = -(float)((int16_t)(((int16_t) gyroRaw[2])<<8 | ((int16_t) gyroRaw[3])))*gyroResolution-gyroYOffset;
+    data->gx = (float)((int16_t)(((int16_t) gyroRaw[4])<<8 | ((int16_t) gyroRaw[5])))*gyroResolution*M_PI/180-gyroXOffset;
+    data->gy = -(float)((int16_t)(((int16_t) gyroRaw[2])<<8 | ((int16_t) gyroRaw[3])))*gyroResolution*M_PI/180-gyroYOffset;
     data->gz = 0; ///< z axis broken
-    ///data->gz = (float)((int16_t)(((int16_t) gyroRaw[0])<<8 | ((int16_t) gyroRaw[1])))*gyroResolution-gyroZOffset;
+    ///data->gz = (float)((int16_t)(((int16_t) gyroRaw[0])<<8 | ((int16_t) gyroRaw[1])))*gyroResolution*M_PI/180-gyroZOffset;
 
     static uint8_t magRaw[6]; ///< x, y, z: lsb, msb = 3*2=6 bytes
 

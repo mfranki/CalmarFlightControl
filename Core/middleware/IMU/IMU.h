@@ -21,3 +21,6 @@
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
 
+/**@brief freertos task
+ */
+void IMUTask();

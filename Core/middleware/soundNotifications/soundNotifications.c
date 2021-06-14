@@ -9,6 +9,7 @@
 
 #include "middleware/soundNotifications/soundNotifications.h"
 
+#include "middleware/soundNotifications/audioData.h"
 #include "drivers/buzzer/buzzer.h"
 #include "cmsis_os.h"
 
@@ -101,6 +102,16 @@ static const soundData_t notifications[] = {
                     {40000 , 50}}
 
     },
+    {                           ///< SN_SETTINGS_MENU_ITEM_1
+        .size = 1,
+        .samples = {{1300  , 100}}
+
+    },
+    {                           ///< SN_SETTINGS_MENU_ITEM_5
+        .size = 1,
+        .samples = {{1300  , 400}}
+
+    },
 };
 
 QueueHandle_t soundQueueHandle = NULL; ///< holds currently playing notification
@@ -160,6 +171,16 @@ void SoundNotificationsPlayInBlockingMode(SoundNotifications_t notification)
         while(BuzzerActive()){}
 
     }
+}
+
+void SoundNotificationsPlayAudio(SoundNotificationsAudioFiles_t audioFile)
+{
+    if(audioFile >= AD_AUDIO_FILES_COUNT)
+    {
+        return;
+    }
+
+    BuzzerPlayAudio(audioData[audioFile], AD_DATA_SIZE, AD_SAMPLE_RATE);
 }
 
 
