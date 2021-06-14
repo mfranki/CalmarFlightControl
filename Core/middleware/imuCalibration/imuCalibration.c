@@ -7,8 +7,6 @@
  * @date 1 cze 2021
  ****************************************************************************/
 
-#include "middleware/IMU/IMU.h"
-
 #include "app/deviceManager/devicemanager.h"
 
 #include "middleware/soundNotifications/soundNotifications.h"
@@ -24,6 +22,7 @@
 #include <cmsis_os.h>
 #include <math.h>
 #include <main.h>
+#include <middleware/imuCalibration/imuCalibration.h>
 
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
@@ -102,7 +101,7 @@ static float MatlabMod(float x, float y);
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
 
-void IMUTask()
+void ImuCalibrationTask()
 {
     while(1)
     {

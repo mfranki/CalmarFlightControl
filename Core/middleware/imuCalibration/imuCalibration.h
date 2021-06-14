@@ -23,4 +23,4 @@
 
 /**@brief freertos task
  */
-void IMUTask();
+void ImuCalibrationTask();

@@ -62,7 +62,6 @@ void MahonyFilterTask()
 
     while(1)
     {
-        HAL_GPIO_WritePin(DEBUG_OUT_1_GPIO_Port, DEBUG_OUT_1_Pin,1);
         Bmx055GetData(&imuData);
         float sampleTime = GetTimeElapsed(&lastTimeCalled, true);
 
@@ -96,8 +95,6 @@ void MahonyFilterTask()
         /** calculate current position based on estimation error and gyro step **/
         orientation = QuatSum(QuatMultiply(QuatProd(orientation,QuatSum(gyroQuat,QuatSum(accError,magError))),sampleTime/2),orientation);
         orientation = QuatNorm(orientation);
-
-        HAL_GPIO_WritePin(DEBUG_OUT_1_GPIO_Port, DEBUG_OUT_1_Pin,0);
 
         vTaskDelayUntil(&lastTickTime,1);
     }

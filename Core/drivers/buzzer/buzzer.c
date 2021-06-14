@@ -14,7 +14,7 @@
 *****************************************************************************/
 
 #define TIMER_BASE_FREQUENCY (1000000U) ///< Hz
-#define AUDIO_PWN_PLAY_FREQUENCY (30000U) ///< Hz
+#define AUDIO_PWM_PLAY_FREQUENCY (30000U) ///< Hz
 #define AUDIO_SAMPLE_QUANTISATION (256U)
 
 /*****************************************************************************
@@ -27,7 +27,7 @@ static uint32_t timChannel = 0;
 static uint32_t cycleCntr = 0;
 static uint32_t cycleCount = 0;
 
-static uint8_t* currentAudioData = NULL;
+static const uint8_t* currentAudioData = NULL;
 static uint32_t oversampleCntr = 0;
 static uint32_t oversampleCount = 0;
 
@@ -81,20 +81,20 @@ bool BuzzerPlay(uint32_t frequency, uint32_t durationMs)
 
 bool BuzzerPlayAudio(const uint8_t* audioData, uint32_t audioDataSize, uint32_t sampleRate)
 {
-    if(audioData == NULL || sampleRate == 0 || AUDIO_PWN_PLAY_FREQUENCY < sampleRate)
+    if(audioData == NULL || sampleRate == 0 || AUDIO_PWM_PLAY_FREQUENCY < sampleRate)
     {
         return false;
     }
 
     currentAudioData = audioData;
 
-    uint32_t prescaler = HAL_RCC_GetSysClockFreq() / (AUDIO_PWN_PLAY_FREQUENCY*AUDIO_SAMPLE_QUANTISATION);
+    uint32_t prescaler = HAL_RCC_GetSysClockFreq() / (AUDIO_PWM_PLAY_FREQUENCY*AUDIO_SAMPLE_QUANTISATION);
     uint32_t period = AUDIO_SAMPLE_QUANTISATION-1;
 
     cycleCount = audioDataSize;
     cycleCntr = 0;
 
-    oversampleCount = AUDIO_PWN_PLAY_FREQUENCY/sampleRate;
+    oversampleCount = AUDIO_PWM_PLAY_FREQUENCY/sampleRate;
     oversampleCntr = 0;
 
 

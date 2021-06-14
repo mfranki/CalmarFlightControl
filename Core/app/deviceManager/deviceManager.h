@@ -43,4 +43,8 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
                        UART_HandleTypeDef* uartDebugHandle);
 
 
+/**@brief getter for current operating mode
+ *
+ * @return current device operating mode
+ */
 deviceOperatingModes_t DeviceManagerGetOperatingMode();

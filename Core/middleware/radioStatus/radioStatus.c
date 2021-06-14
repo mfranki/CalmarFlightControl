@@ -98,14 +98,6 @@ bool RadioStatusGetConnectionStatus()
     return radioSignalAvailable;
 }
 
-void RadioStatusSetCalibrationMode(bool enableCalibrationMode)
-{
-
-}
-
-
-void RadioStatusSetSettingsMode(bool enableSettingsMode);
-
 /******************************************************************************
                         PRIVATE FUNCTION IMPLEMENTATION
 ******************************************************************************/

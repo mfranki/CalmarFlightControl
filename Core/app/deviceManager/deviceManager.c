@@ -7,6 +7,7 @@
  * @date May 24, 2021
  ****************************************************************************/
 
+#include <middleware/imuCalibration/imuCalibration.h>
 #include "app/deviceManager/deviceManager.h"
 
 #include "main.h"
@@ -24,7 +25,6 @@
 #include "middleware/soundNotifications/soundNotifications.h"
 #include "middleware/radioStatus/radioStatus.h"
 #include "middleware/remoteSettings/remoteSettings.h"
-#include "middleware/IMU/IMU.h"
 
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
@@ -45,8 +45,7 @@ enum{
     INIT_LOOP_UART = 1,
     INIT_LOOP_BMX,
     INIT_LOOP_ADC,
-    INIT_LOOP_BATTERY_STATUS,
-    INIT_LOOP_IMU
+    INIT_LOOP_BATTERY_STATUS
 };
 
 
@@ -68,7 +67,7 @@ static struct{
     TaskHandle_t remoteSettingsTask;
     TaskHandle_t batteryStatusTask;
     TaskHandle_t mahonyFilterTask;
-    TaskHandle_t imuTask;
+    TaskHandle_t imuCalibrationTask;
     TaskHandle_t deviceManagerTask;
 }taskHandles;
 
@@ -127,7 +126,7 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     xTaskCreate(&RemoteSettingsTask,    "remoteSettingsTask",    100,  NULL, 0, &(taskHandles.remoteSettingsTask   ));
     xTaskCreate(&BatteryStatusTask,     "batteryStatusTask",     100,  NULL, 0, &(taskHandles.batteryStatusTask    ));
     xTaskCreate(&MahonyFilterTask,      "mahonyFilterTask",      300,  NULL, 1, &(taskHandles.mahonyFilterTask     ));
-    xTaskCreate(&IMUTask,               "imuTask",               1000, NULL, 0, &(taskHandles.imuTask              ));
+    xTaskCreate(&ImuCalibrationTask,    "imuCalibrationTask",    1000, NULL, 0, &(taskHandles.imuCalibrationTask              ));
     xTaskCreate(&DeviceManagerTask,     "deviceManagerTask",     200,  NULL, 0, &(taskHandles.deviceManagerTask    ));
 
     operatingMode = DEVICE_STANDBY;
@@ -173,7 +172,7 @@ static void DeviceManagerTask()
                 if(calibration<-1 || calibration>1)
                 {
                     operatingMode = DEVICE_CALIBRATION;
-                    vTaskResume(taskHandles.imuTask);
+                    vTaskResume(taskHandles.imuCalibrationTask);
 
                     continue;
                 } else  {
@@ -187,7 +186,7 @@ static void DeviceManagerTask()
         /** CALIBRATION MODE **/
         if(operatingMode == DEVICE_CALIBRATION)
         {
-            if(eSuspended == eTaskGetState(taskHandles.imuTask))
+            if(eSuspended == eTaskGetState(taskHandles.imuCalibrationTask))
             {
                 RemoteSettingsSetVariable(RS_CALIBRATION, 0.0f);
                 operatingMode = DEVICE_STANDBY;
