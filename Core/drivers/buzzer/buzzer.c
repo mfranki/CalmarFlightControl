@@ -14,6 +14,8 @@
 *****************************************************************************/
 
 #define TIMER_BASE_FREQUENCY (1000000U) ///< Hz
+#define AUDIO_PWM_PLAY_FREQUENCY (30000U) ///< Hz
+#define AUDIO_SAMPLE_QUANTISATION (256U)
 
 /*****************************************************************************
                      PRIVATE STRUCTS / ENUMS / VARIABLES
@@ -24,6 +26,10 @@ static uint32_t timChannel = 0;
 
 static uint32_t cycleCntr = 0;
 static uint32_t cycleCount = 0;
+
+static const uint8_t* currentAudioData = NULL;
+static uint32_t oversampleCntr = 0;
+static uint32_t oversampleCount = 0;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION
@@ -73,6 +79,33 @@ bool BuzzerPlay(uint32_t frequency, uint32_t durationMs)
 	return true;
 }
 
+bool BuzzerPlayAudio(const uint8_t* audioData, uint32_t audioDataSize, uint32_t sampleRate)
+{
+    if(audioData == NULL || sampleRate == 0 || AUDIO_PWM_PLAY_FREQUENCY < sampleRate)
+    {
+        return false;
+    }
+
+    currentAudioData = audioData;
+
+    uint32_t prescaler = HAL_RCC_GetSysClockFreq() / (AUDIO_PWM_PLAY_FREQUENCY*AUDIO_SAMPLE_QUANTISATION);
+    uint32_t period = AUDIO_SAMPLE_QUANTISATION-1;
+
+    cycleCount = audioDataSize;
+    cycleCntr = 0;
+
+    oversampleCount = AUDIO_PWM_PLAY_FREQUENCY/sampleRate;
+    oversampleCntr = 0;
+
+
+    if(!SetupTimer(prescaler, period))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 bool BuzzerActive()
 {
     return cycleCntr <= cycleCount;
@@ -80,12 +113,35 @@ bool BuzzerActive()
 
 void BuzzerTimerISR()
 {
-    cycleCntr++;
-    if(cycleCntr > cycleCount)
+    if(currentAudioData == NULL)
     {
-        HAL_TIM_PWM_Stop(htim, timChannel);
-        HAL_TIM_Base_Stop_IT(htim);
+        cycleCntr++;
+        if(cycleCntr > cycleCount)
+        {
+            HAL_TIM_PWM_Stop(htim, timChannel);
+            HAL_TIM_Base_Stop_IT(htim);
+        }
+    } else {
+
+        oversampleCntr++;
+        if(oversampleCntr == oversampleCount)
+        {
+            oversampleCntr = 0;
+
+            *(timChannel+&(htim->Instance->CCR1)) = currentAudioData[cycleCntr];
+
+            cycleCntr++;
+            if(cycleCntr > cycleCount)
+            {
+                currentAudioData = NULL;
+                HAL_TIM_PWM_Stop(htim, timChannel);
+                HAL_TIM_Base_Stop_IT(htim);
+            }
+        }
+
     }
+
+
 }
 
 /******************************************************************************

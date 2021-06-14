@@ -12,7 +12,6 @@
 #include "drivers/uart/uart.h"
 #include "drivers/utils/utils.h"
 
-
 #include "cmsis_os.h"
 #include <main.h>
 #include <stdbool.h>
@@ -26,6 +25,8 @@
 #define MAG_GAIN (20.0f)
 #define ACC_GAIN (0.6f)
 
+#define EARTH_GRAVITY_ACC (9.81f)
+
 /*****************************************************************************
                      PRIVATE STRUCTS / ENUMS / VARIABLES
 *****************************************************************************/
@@ -35,7 +36,7 @@ static  quaternion_t initialAccQuatVector = {.w = 0,
 static quaternion_t initialMagQuatVector = {.w = 0,
                                             .v = {1,0,0}};
 
-static quaternion_t position = {.w = 1,
+static quaternion_t orientation = {.w = 1,
                                 .v = {0,0,0}};
 
 static bool useMagnetometer = true;
@@ -43,7 +44,6 @@ static bool useMagnetometer = true;
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION
 *****************************************************************************/
-
 
 
 /*****************************************************************************
@@ -66,8 +66,8 @@ void MahonyFilterTask()
         float sampleTime = GetTimeElapsed(&lastTimeCalled, true);
 
         /** calc estimated acc and mag vector positions based on last iteration **/
-        quaternion_t accEstimate = QuatProd(QuatProd(QuatInv(position),initialAccQuatVector),position);
-        quaternion_t magEstimate = QuatProd(QuatProd(QuatInv(position),initialMagQuatVector),position);
+        quaternion_t accEstimate = QuatProd(QuatProd(QuatInv(orientation),initialAccQuatVector),orientation);
+        quaternion_t magEstimate = QuatProd(QuatProd(QuatInv(orientation),initialMagQuatVector),orientation);
 
         /** calc mag vector part perpendicular to  acc **/
         vector_t mag = {imuData.mx,imuData.my,imuData.mz};
@@ -83,7 +83,6 @@ void MahonyFilterTask()
         quaternion_t magError = QuatMultiply(QuatProd(QuatInv(magEstimate),magQuat),MAG_GAIN);
 
         quaternion_t gyroQuat = {.w = 0, .v = {imuData.gx,imuData.gy,imuData.gz}};
-        gyroQuat.v = VectorMultiply(gyroQuat.v,M_PI/180);
 
         if(!useMagnetometer)
         {
@@ -93,8 +92,9 @@ void MahonyFilterTask()
             magError.k = 0;
         }
 
-        position = QuatSum(QuatMultiply(QuatProd(position,QuatSum(gyroQuat,QuatSum(accError,magError))),sampleTime/2),position);
-        position = QuatNorm(position);
+        /** calculate current position based on estimation error and gyro step **/
+        orientation = QuatSum(QuatMultiply(QuatProd(orientation,QuatSum(gyroQuat,QuatSum(accError,magError))),sampleTime/2),orientation);
+        orientation = QuatNorm(orientation);
 
         vTaskDelayUntil(&lastTickTime,1);
     }
@@ -126,9 +126,9 @@ void MahonyFilterUseMagnetometer(bool useMag)
     useMagnetometer = useMag;
 }
 
-quaternion_t MahonyFilterGetPosition()
+quaternion_t MahonyFilterGetOrientation()
 {
-    return position;
+    return orientation;
 }
 
 /******************************************************************************

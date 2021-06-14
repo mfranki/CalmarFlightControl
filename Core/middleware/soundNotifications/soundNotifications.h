@@ -27,8 +27,26 @@ typedef enum{
     SN_CALIBRATION_START,
     SN_MAGNETOMETER_CALIBRATION_AXIS_DONE,
     SN_MAGNETOMETER_CALIBRATION_INVALID_AXIS,
-    SN_CALIBRATION_FINISHED
+    SN_CALIBRATION_FINISHED,
+
+    SN_SETTINGS_MENU_ITEM_1,
+    SN_SETTINGS_MENU_ITEM_5,
 }SoundNotifications_t;
+
+typedef enum{
+    SN_ZERO,
+    SN_ONE,
+    SN_TWO,
+    SN_THREE,
+    SN_FOUR,
+    SN_FIVE,
+    SN_SIX,
+    SN_SEVEN,
+    SN_EIGHT,
+    SN_NINE,
+    SN_DOT,
+    SN_MINUS
+}SoundNotificationsAudioFiles_t;
 
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION
@@ -52,3 +70,9 @@ bool SoundNotificationsPlay(SoundNotifications_t notification);
  * @param [in] notification
  */
 void SoundNotificationsPlayInBlockingMode(SoundNotifications_t notification);
+
+/**@brief plays selected audio in non blocking mode
+ *
+ * @param [in] audioFile @ref audioData.h
+ */
+void SoundNotificationsPlayAudio(SoundNotificationsAudioFiles_t audioFile);

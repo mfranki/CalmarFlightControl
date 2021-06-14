@@ -1,34 +1,34 @@
 /*****************************************************************************
- * @file /CalmarFlightController/Core/middleware/IMU/IMU.c
+ * @file /CalmarFlightController/Core/middleware/pid/pid.c
  *
  * @brief Source code
  * 
  * @author Michal Frankiewicz
- * @date 1 cze 2021
+ * @date Jun 2, 2021
  ****************************************************************************/
 
-#include "middleware/IMU/IMU.h"
+#include "middleware/pid/pid.h"
 
-#include "middleware/soundNotifications/soundNotifications.h"
-
-#include <cmsis_os.h>
-#include <main.h>
+#include "drivers/utils/utils.h"
 
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
 *****************************************************************************/
 
-typedef enum{
-    IMU_NORMAL_MODE,
-    IMU_CALIBRATION
 
-}IMUModes_t;
 
 /*****************************************************************************
                      PRIVATE STRUCTS / ENUMS / VARIABLES
 *****************************************************************************/
 
-static IMUModes_t imuMode = IMU_NORMAL_MODE;
+typedef struct{
+    float p;
+    float i;
+    float d;
+    float filterCoefficient;
+
+    float integral;
+}pidData_t;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION
@@ -40,12 +40,19 @@ static IMUModes_t imuMode = IMU_NORMAL_MODE;
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
 
-void IMUTask()
+pidHandle_t PidInit(float p, float i, float d, float filterCoefficient)
 {
-    while(1)
-    {
 
-    }
+}
+
+float PidCalc(pidHandle_t pidHandle, float input)
+{
+
+}
+
+float PidCalcExternVel(pidHandle_t pidHandle, float input, float inputVel)
+{
+
 }
 
 /******************************************************************************
