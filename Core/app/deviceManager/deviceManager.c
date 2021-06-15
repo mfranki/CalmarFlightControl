@@ -262,7 +262,7 @@ static void DeviceManagerTask()
         }
 
 
-        quaternion_t q = MahonyFilterGetOrientation();
+   /*     quaternion_t q = MahonyFilterGetOrientation();
         vector_t v = QuatTranslateToRotationVector(q);
         UartWrite("%f\t%f\t%f\r\n",v.x*180/3.141,v.y*180/3.141,v.z*180/3.141);
         //UartWrite("%f\t%f\t%f\t%f\r\n",q.w,q.i,q.j,q.k);

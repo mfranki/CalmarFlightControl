@@ -35,7 +35,7 @@ static void* registeredVariables[EEPROM_VARIABLE_COUNT];
 
 void MemoryInit()
 {
-    memset(registeredVariables, 0, sizeof(registeredVariables));
+    memset(registeredVariables, NULL, sizeof(registeredVariables));
 }
 
 bool MemoryRegisterVariable(eepromIndexes_t index, void* address)
@@ -54,6 +54,11 @@ bool MemorySaveRegisteredVariables()
 {
     for(eepromIndexes_t index=0; index<EEPROM_VARIABLE_COUNT; index++)
     {
+        if(registeredVariables[index] == NULL)
+        {
+            continue;
+        }
+
         if(!EepromWrite(index, registeredVariables[index]))
         {
             return false;
