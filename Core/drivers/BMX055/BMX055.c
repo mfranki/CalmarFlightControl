@@ -11,6 +11,9 @@
 
 #include "drivers/uart/uart.h"
 #include "drivers/utils/utils.h"
+#include "drivers/eeprom/eeprom.h"
+
+#include "middleware/memory/memory.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -246,14 +249,6 @@ static float gyroXOffset = 0;
 static float gyroYOffset = 0;
 static float gyroZOffset = 0;
 
-/*
-static float magXOffset = -24.8574*0.3;
-static float magYOffset = 40.3328*0.3;
-static float magZOffset = -111.517*0.3;
-static float magXScale = 0.9490;
-static float magYScale = 0.9161;
-static float magZScale = 1.0635;*/
-
 static float magXOffset = 0;
 static float magYOffset = 0;
 static float magZOffset = 0;
@@ -279,6 +274,8 @@ static bool SetAccRange(uint8_t range);
 static bool SetGyroRange(uint8_t range);
 
 static bool CheckConnection();
+
+static bool NvmInit();
 
 /*****************************************************************************
                            INTERFACE IMPLEMENTATION
@@ -345,6 +342,11 @@ bool Bmx055Init(SPI_HandleTypeDef *HSPI)
     }
 
     if(!WriteAddress(MAG, MAG_REP_Z, 0x10U))    ///< max repetitions 1+0xFF = 256
+    {
+        return false;
+    }
+
+    if(!NvmInit())
     {
         return false;
     }
@@ -718,6 +720,37 @@ static bool CheckConnection()
     {
         return false;
     }
+
+    return true;
+}
+
+
+static bool NvmInit()
+{
+    float data = 0;
+    if(EepromRead(EEPROM_ACC_OFFSET_X,  &data)) { accXOffset = data; }
+    if(EepromRead(EEPROM_ACC_OFFSET_Y,  &data)) { accYOffset = data; }
+    if(EepromRead(EEPROM_ACC_OFFSET_Z,  &data)) { accZOffset = data; }
+
+    if(EepromRead(EEPROM_GYRO_OFFSET_X, &data)) { gyroXOffset = data; }
+    if(EepromRead(EEPROM_GYRO_OFFSET_Y, &data)) { gyroYOffset = data; }
+    if(EepromRead(EEPROM_GYRO_OFFSET_Z, &data)) { gyroZOffset = data; }
+
+    if(EepromRead(EEPROM_MAG_OFFSET_X,  &data)) { magXOffset = data; }
+    if(EepromRead(EEPROM_MAG_OFFSET_Y,  &data)) { magYOffset = data; }
+    if(EepromRead(EEPROM_MAG_OFFSET_Z,  &data)) { magZOffset = data; }
+
+    if(!MemoryRegisterVariable(EEPROM_ACC_OFFSET_X,  &accXOffset))  {return false;}
+    if(!MemoryRegisterVariable(EEPROM_ACC_OFFSET_Y,  &accYOffset))  {return false;}
+    if(!MemoryRegisterVariable(EEPROM_ACC_OFFSET_Z,  &accZOffset))  {return false;}
+
+    if(!MemoryRegisterVariable(EEPROM_GYRO_OFFSET_X, &gyroXOffset)) {return false;}
+    if(!MemoryRegisterVariable(EEPROM_GYRO_OFFSET_Y, &gyroYOffset)) {return false;}
+    if(!MemoryRegisterVariable(EEPROM_GYRO_OFFSET_Z, &gyroZOffset)) {return false;}
+
+    if(!MemoryRegisterVariable(EEPROM_MAG_OFFSET_X,  &magXOffset))  {return false;}
+    if(!MemoryRegisterVariable(EEPROM_MAG_OFFSET_Y,  &magYOffset))  {return false;}
+    if(!MemoryRegisterVariable(EEPROM_MAG_OFFSET_Z,  &magZOffset))  {return false;}
 
     return true;
 }

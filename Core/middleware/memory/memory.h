@@ -1,15 +1,17 @@
 /*****************************************************************************
- * @file /CalmarFlightController/Core/middleware/imuCalibration/imuCalibration.h
+ * @file /CalmarFlightController/Core/middleware/memory/memory.h
  *
  * @brief Header file 
  * 
  * @author Michal Frankiewicz
- * @date 1 cze 2021
+ * @date Jun 15, 2021
  ****************************************************************************/
 #pragma once 
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#include "drivers/eeprom/eeprom.h"
 
 /*****************************************************************************
                        PUBLIC DEFINES / MACROS / ENUMS
@@ -21,6 +23,8 @@
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
 
-/**@brief freertos task
- */
-void ImuCalibrationTask();
+void MemoryInit();
+
+bool MemoryRegisterVariable(eepromIndexes_t index, void* address);
+
+bool MemorySaveRegisteredVariables();

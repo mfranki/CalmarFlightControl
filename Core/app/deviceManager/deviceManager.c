@@ -19,12 +19,14 @@
 #include "drivers/radio/radio.h"
 #include "drivers/adc/adc.h"
 #include "drivers/buzzer/buzzer.h"
+#include "drivers/eeprom/eeprom.h"
 
 #include "middleware/batteryStatus/batteryStatus.h"
 #include "middleware/mahonyFilter/mahonyFilter.h"
 #include "middleware/soundNotifications/soundNotifications.h"
 #include "middleware/radioStatus/radioStatus.h"
 #include "middleware/remoteSettings/remoteSettings.h"
+#include "middleware/memory/memory.h"
 
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
@@ -43,6 +45,7 @@
 
 enum{
     INIT_LOOP_UART = 1,
+    INIT_LOOP_EEPROM,
     INIT_LOOP_BMX,
     INIT_LOOP_ADC,
     INIT_LOOP_BATTERY_STATUS
@@ -106,6 +109,11 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_UART)
     }
+    if(!EepromInit())
+    {
+        INITIALIZATION_FAIL_LOOP(INIT_LOOP_EEPROM)
+    }
+    MemoryInit();
     if(!Bmx055Init(spiBMXHandle))
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_BMX)
@@ -177,6 +185,7 @@ static void DeviceManagerTask()
                     continue;
                 } else  {
                     operatingMode = DEVICE_STANDBY;
+                    MemorySaveRegisteredVariables();
                     continue;
                 }
 
@@ -190,6 +199,7 @@ static void DeviceManagerTask()
             {
                 RemoteSettingsSetVariable(RS_CALIBRATION, 0.0f);
                 operatingMode = DEVICE_STANDBY;
+                MemorySaveRegisteredVariables();
                 continue;
             }
 
@@ -251,7 +261,7 @@ static void DeviceManagerTask()
             }
         }
 
-/*
+
         quaternion_t q = MahonyFilterGetOrientation();
         vector_t v = QuatTranslateToRotationVector(q);
         UartWrite("%f\t%f\t%f\r\n",v.x*180/3.141,v.y*180/3.141,v.z*180/3.141);

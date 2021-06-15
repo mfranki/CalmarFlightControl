@@ -1,5 +1,5 @@
 /*****************************************************************************
- * @file /CalmarFlightController/Core/middleware/IMU/IMU.c
+ * @file /CalmarFlightController/Core/middleware/imuCalibration/imuCalibration.c
  *
  * @brief Source code
  * 
