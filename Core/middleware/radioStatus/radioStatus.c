@@ -53,8 +53,15 @@ void RadioStatusTask()
                 radioChannelCurrentData[channel] = data.channelData;
             }
 
-            if(DeviceManagerGetOperatingMode() == DEVICE_INITIALIZATION ||
-               DeviceManagerGetOperatingMode() == DEVICE_HOMING)
+            if(DeviceManagerGetOperatingMode() == DEVICE_INITIALIZATION)
+            {
+                radioChannelCurrentData[channel] = 0;
+            }
+
+            if((DeviceManagerGetOperatingMode() == DEVICE_HOMING) &&
+               (channel == RADIO_DIAL_CHANNEL ||
+               channel == RADIO_SWITCH_CHANNEL ||
+               channel == RADIO_THROTTLE_CHANNEL))
             {
                 radioChannelCurrentData[channel] = 0;
             }

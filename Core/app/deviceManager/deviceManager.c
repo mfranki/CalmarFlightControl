@@ -47,8 +47,7 @@ enum{
     INIT_LOOP_UART = 1,
     INIT_LOOP_EEPROM,
     INIT_LOOP_BMX,
-    INIT_LOOP_ADC,
-    INIT_LOOP_BATTERY_STATUS
+    INIT_LOOP_ADC
 };
 
 
@@ -122,10 +121,6 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_ADC)
     }
-    if(!BatteryStatusInit())
-    {
-        INITIALIZATION_FAIL_LOOP(INIT_LOOP_BATTERY_STATUS)
-    }
 
     /** CREATE TASKS **/
 
@@ -157,6 +152,13 @@ static void DeviceManagerTask()
         /** STANDBY MODE **/
         if(operatingMode == DEVICE_STANDBY)
         {
+            if(BatteryStatusGetStatus() != BATTERY_OK)
+            {
+                RemoteSettingsSetVariable(RS_CALIBRATION, 0.0f);
+                operatingMode = DEVICE_ERROR;
+                continue;
+            }
+
             if(RadioStatusGetChannelData(RADIO_THROTTLE_CHANNEL) > THROTTLE_OFF_TRH)
             {
                 operatingMode = DEVICE_FLIGHT;
@@ -190,6 +192,13 @@ static void DeviceManagerTask()
                 }
 
             }
+
+            if(BatteryStatusGetStatus() != BATTERY_OK)
+            {
+                RemoteSettingsSetVariable(RS_CALIBRATION, 0.0f);
+                operatingMode = DEVICE_ERROR;
+                continue;
+            }
         }
 
         /** CALIBRATION MODE **/
@@ -207,6 +216,13 @@ static void DeviceManagerTask()
             {
                 RemoteSettingsSetVariable(RS_CALIBRATION, 0.0f);
                 operatingMode = DEVICE_SETTINGS;
+                continue;
+            }
+
+            if(BatteryStatusGetStatus() != BATTERY_OK)
+            {
+                RemoteSettingsSetVariable(RS_CALIBRATION, 0.0f);
+                operatingMode = DEVICE_ERROR;
                 continue;
             }
         }
@@ -228,12 +244,13 @@ static void DeviceManagerTask()
                 flightModeZerosCounter = 0;
             }
 
-            if(!RadioStatusGetConnectionStatus())
+            if((!RadioStatusGetConnectionStatus()) || (BatteryStatusGetStatus() != BATTERY_OK))
             {
                 flightModeZerosCounter = 0;
                 operatingMode = DEVICE_HOMING;
                 continue;
             }
+
         }
 
         /**HOMING MODE **/
@@ -262,7 +279,11 @@ static void DeviceManagerTask()
         }
 
 
-   /*     quaternion_t q = MahonyFilterGetOrientation();
+
+
+
+
+    /*    quaternion_t q = MahonyFilterGetOrientation();
         vector_t v = QuatTranslateToRotationVector(q);
         UartWrite("%f\t%f\t%f\r\n",v.x*180/3.141,v.y*180/3.141,v.z*180/3.141);
         //UartWrite("%f\t%f\t%f\t%f\r\n",q.w,q.i,q.j,q.k);
@@ -275,10 +296,19 @@ static void DeviceManagerTask()
                                                        imuData.gx,
                                                        imuData.gy,
                                                        imuData.gz);*/
-  /*      UartWrite("%f\t %f\t %f\t \r\n",imuData.mx,
-                                        imuData.my,
-                                        imuData.mz);
-*/
+    /*
+        static const char* modes[] = {
+                "DEVICE_INITIALIZATION\n",  /// 0
+                "DEVICE_STANDBY\n",         /// 1
+                "DEVICE_CALIBRATION\n",     /// 2
+                "DEVICE_SETTINGS\n",        /// 3
+                "DEVICE_FLIGHT\n",          /// 4
+                "DEVICE_HOMING\n",          /// 5
+                "DEVICE_ERROR\n"
+        };
+
+        UartWrite(modes[operatingMode]);*/
+
         osDelay(100);
     }
 }

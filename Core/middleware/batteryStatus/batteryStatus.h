@@ -20,18 +20,13 @@ typedef enum {
     BATTERY_OK,
     BATTERY_LOW,
     BATTERY_DEPLEATED,
-    BATTERY_UNDERVOLTAGE
+    BATTERY_UNDERVOLTAGE,
+    BATTERY_ERROR
 }batteryStatus_t;
 
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
-
-/**@brief initiaizes module,
- *        checks if battery voltage is in right range and detects battery cell count
- * @return true if voltage is correct
- */
-bool BatteryStatusInit();
 
 /**@brief getter for battery status
  *
@@ -40,6 +35,6 @@ bool BatteryStatusInit();
 batteryStatus_t BatteryStatusGetStatus();
 
 /**@brief battery status freertos task
- *        is called every 100ms
+ *        is called every 1000ms
  */
 void BatteryStatusTask();
