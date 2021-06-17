@@ -41,7 +41,8 @@ typedef enum{
 void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
                        SPI_HandleTypeDef* spiBMXHandle,
                        TIM_HandleTypeDef* timBuzzerHandle,
-                       UART_HandleTypeDef* uartDebugHandle);
+                       UART_HandleTypeDef* uartDebugHandle,
+                       TIM_HandleTypeDef* timMotorsHandle);
 
 
 /**@brief getter for current operating mode

@@ -20,6 +20,7 @@
 #include "drivers/adc/adc.h"
 #include "drivers/buzzer/buzzer.h"
 #include "drivers/eeprom/eeprom.h"
+#include "drivers/motors/motors.h"
 
 #include "middleware/batteryStatus/batteryStatus.h"
 #include "middleware/mahonyFilter/mahonyFilter.h"
@@ -47,7 +48,8 @@ enum{
     INIT_LOOP_UART = 1,
     INIT_LOOP_EEPROM,
     INIT_LOOP_BMX,
-    INIT_LOOP_ADC
+    INIT_LOOP_ADC,
+    INIT_LOOP_MOTORS
 };
 
 
@@ -89,7 +91,8 @@ static void DeviceManagerTask();
 void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
                        SPI_HandleTypeDef* spiBMXHandle,
                        TIM_HandleTypeDef* timBuzzerHandle,
-                       UART_HandleTypeDef* uartDebugHandle)
+                       UART_HandleTypeDef* uartDebugHandle,
+                       TIM_HandleTypeDef* timMotorsHandle)
 {
     if(adcHandle == NULL ||
        spiBMXHandle == NULL ||
@@ -120,6 +123,10 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     if(!AdcInit(adcHandle))
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_ADC)
+    }
+    if(!MotorsInit(timMotorsHandle))
+    {
+        INITIALIZATION_FAIL_LOOP(INIT_LOOP_MOTORS)
     }
 
     /** CREATE TASKS **/
@@ -277,9 +284,6 @@ static void DeviceManagerTask()
                 homingCounter = 0;
             }
         }
-
-
-
 
 
 
