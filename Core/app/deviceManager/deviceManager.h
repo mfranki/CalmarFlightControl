@@ -23,7 +23,8 @@ typedef enum{
     DEVICE_CALIBRATION,     /// 2
     DEVICE_SETTINGS,        /// 3
     DEVICE_FLIGHT,          /// 4
-    DEVICE_HOMING           /// 5
+    DEVICE_HOMING,          /// 5
+    DEVICE_ERROR
 }deviceOperatingModes_t;
 
 /*****************************************************************************

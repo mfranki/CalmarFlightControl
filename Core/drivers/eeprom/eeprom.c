@@ -70,7 +70,9 @@ uint32_t FindLastVariableAddress();
  */
 void RefreshEeprom();
 
-
+/**@brief erases FLASH sector: EEPROM_FLASH_SECTOR
+ */
+void EraseEeprom();
 /*****************************************************************************
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
@@ -140,7 +142,9 @@ bool ReadMemoryLocation(uint32_t offset, void* data)
 
 bool WriteData(uint32_t offset, uint32_t index, void* data)
 {
-    CLEAR_BIT(FLASH->CR, FLASH_CR_PSIZE);
+    while((FLASH->SR&FLASH_SR_BSY) != 0){}
+
+    FLASH->CR = 0x00000000;
     FLASH->CR |= FLASH_PSIZE_WORD;
     FLASH->CR |= FLASH_CR_PG;
 
@@ -198,7 +202,7 @@ uint32_t FindLastVariableAddress()
 
 void RefreshEeprom()
 {
-    void* variables = malloc(EEPROM_VARIABLE_COUNT*sizeof(uint32_t));
+    uint32_t  variables[EEPROM_VARIABLE_COUNT];
     bool variablesDone[EEPROM_VARIABLE_COUNT];
     uint32_t variablesDoneSum = 0;
 
@@ -213,19 +217,32 @@ void RefreshEeprom()
         ReadMemoryLocation(offset, &index);
         if((index < EEPROM_VARIABLE_COUNT) && (variablesDone[index] == false))
         {
-            ReadMemoryLocation(offset+CELL_SIZE/2, (variables+index*sizeof(uint32_t)));
+            ReadMemoryLocation(offset+CELL_SIZE/2, (&variables[index]));
 
             variablesDone[index] = true;
             variablesDoneSum++;
         }
     }
 
-    FLASH_Erase_Sector(EEPROM_FLASH_SECTOR, FLASH_VOLTAGE_RANGE_4);
+    EraseEeprom();
 
     lastVariableOffset = 0;
 
     for(uint32_t index=0; index<EEPROM_VARIABLE_COUNT; index++)
     {
-        EepromWrite(index, (variables+index*sizeof(uint32_t)));
+        EepromWrite(index, (&variables[index]));
     }
+}
+
+void EraseEeprom()
+{
+    while((FLASH->SR&FLASH_SR_BSY) != 0){}
+
+    FLASH->CR = 0x00000000;
+    FLASH->CR |= FLASH_PSIZE_DOUBLE_WORD;
+    FLASH->CR |= EEPROM_FLASH_SECTOR<<FLASH_CR_SNB_Pos;
+    FLASH->CR |= FLASH_CR_SER;
+    FLASH->CR |= FLASH_CR_STRT;
+
+    while((FLASH->SR&FLASH_SR_BSY) != 0){}
 }

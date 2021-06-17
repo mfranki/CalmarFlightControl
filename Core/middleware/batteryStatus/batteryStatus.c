@@ -8,7 +8,10 @@
  ****************************************************************************/
 
 #include "drivers/adc/adc.h"
+
 #include "middleware/batteryStatus/batteryStatus.h"
+#include "middleware/soundNotifications/soundNotifications.h"
+
 #include "cmsis_os.h"
 
 #include <main.h>
@@ -40,7 +43,7 @@
 
 static uint8_t detectedCellCount = 0;
 
-static batteryStatus_t batteryStatus = BATTERY_UNDERVOLTAGE;
+static batteryStatus_t batteryStatus = BATTERY_OK;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION
@@ -66,22 +69,6 @@ static batteryStatus_t GetMomentaryBatteryStatus(float voltage, bool* hysteresis
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
 
-bool BatteryStatusInit()
-{
-
-    for(uint8_t tries=0; detectedCellCount==0 && tries<BATTERY_MEAS_CELL_COUNT_RETRIES ; tries++)
-    {
-        detectedCellCount = DetectCellCount();
-    }
-
-    if(detectedCellCount == 0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
 batteryStatus_t BatteryStatusGetStatus()
 {
     return batteryStatus;
@@ -89,6 +76,18 @@ batteryStatus_t BatteryStatusGetStatus()
 
 void BatteryStatusTask()
 {
+    for(uint8_t tries=0; detectedCellCount==0 && tries<BATTERY_MEAS_CELL_COUNT_RETRIES ; tries++)
+    {
+        detectedCellCount = DetectCellCount();
+    }
+
+    while(detectedCellCount == 0)
+    {
+        batteryStatus = BATTERY_ERROR;
+        SoundNotificationsPlay(SN_BATTERY_ERROR);
+        osDelay(1000);
+    }
+
     bool hr = 0;
     batteryStatus = GetMomentaryBatteryStatus(AdcGetBatteryVoltage(),&hr);
 
@@ -96,7 +95,15 @@ void BatteryStatusTask()
     float measurementSum = 0;
     while(1)
     {
-        osDelay(100);
+        if(batteryStatus == BATTERY_LOW)
+        {
+            SoundNotificationsPlay(SN_BATTERY_LOW);
+        }else if(batteryStatus != BATTERY_OK)
+        {
+            SoundNotificationsPlay(SN_BATTERY_ERROR);
+        }
+
+        osDelay(1000);
 
         measurementSum += AdcGetBatteryVoltage();
 

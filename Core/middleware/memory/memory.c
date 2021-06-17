@@ -35,7 +35,7 @@ static void* registeredVariables[EEPROM_VARIABLE_COUNT];
 
 void MemoryInit()
 {
-    memset(registeredVariables, NULL, sizeof(registeredVariables));
+    memset(registeredVariables, 0, sizeof(registeredVariables));
 }
 
 bool MemoryRegisterVariable(eepromIndexes_t index, void* address)
@@ -64,6 +64,8 @@ bool MemorySaveRegisteredVariables()
             return false;
         }
     }
+
+    return true;
 }
 
 /******************************************************************************

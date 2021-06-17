@@ -32,6 +32,7 @@ static bool waitingForMeasurement = false;
 *****************************************************************************/
 
 
+
 /*****************************************************************************
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
@@ -45,7 +46,6 @@ bool AdcInit(ADC_HandleTypeDef* hadc)
     adcHandle = hadc;
 
     HAL_ADC_Start(adcHandle);
-
     return true;
 }
 
