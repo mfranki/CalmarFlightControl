@@ -19,12 +19,24 @@ typedef enum{
     EEPROM_ACC_OFFSET_X = 1,
     EEPROM_ACC_OFFSET_Y,
     EEPROM_ACC_OFFSET_Z,
+
     EEPROM_GYRO_OFFSET_X,
     EEPROM_GYRO_OFFSET_Y,
     EEPROM_GYRO_OFFSET_Z,
+
     EEPROM_MAG_OFFSET_X,
     EEPROM_MAG_OFFSET_Y,
     EEPROM_MAG_OFFSET_Z,
+
+    EEPROM_PID_XY_P,
+    EEPROM_PID_XY_I,
+    EEPROM_PID_XY_D,
+
+    EEPROM_PID_Z_P,
+    EEPROM_PID_Z_I,
+    EEPROM_PID_Z_D,
+
+    EEPROM_PID_N,
 
     EEPROM_VARIABLE_COUNT   ///< max amount of alowed eeprom indexes, not  valid variable
 }eepromIndexes_t;

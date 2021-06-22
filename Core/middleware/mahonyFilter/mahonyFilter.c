@@ -8,6 +8,8 @@
  ****************************************************************************/
 
 #include "middleware/mahonyFilter/mahonyFilter.h"
+#include "middleware/digitalFilter/digitalFilter.h"
+
 #include "drivers/BMX055/BMX055.h"
 #include "drivers/uart/uart.h"
 #include "drivers/utils/utils.h"
@@ -21,9 +23,12 @@
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
 *****************************************************************************/
-
+/*
 #define MAG_GAIN (20.0f)
 #define ACC_GAIN (0.6f)
+*/
+#define MAG_GAIN (5.0f)
+#define ACC_GAIN (1.0f)
 
 #define EARTH_GRAVITY_ACC (9.81f)
 
@@ -41,6 +46,8 @@ static quaternion_t orientation = {.w = 1,
 
 static bool useMagnetometer = true;
 
+static digitalFilterHandle_t filterHandleAx,filterHandleAy,filterHandleAz;
+
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION
 *****************************************************************************/
@@ -50,10 +57,20 @@ static bool useMagnetometer = true;
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
 
+bool MahonyFilterInit()
+{
+    /** 1Hz low pass filter **/
+    float numerator[] = {0.000009825916820471736, 0.00001965183364094347, 0.000009825916820471736};
+    float denominator[] = {1, -1.991114292201654, 0.991153595868936};
+
+    if(!DigitalFilterCreateFilter(numerator, denominator, 2, &filterHandleAx)){return false;}
+    if(!DigitalFilterCreateFilter(numerator, denominator, 2, &filterHandleAy)){return false;}
+    if(!DigitalFilterCreateFilter(numerator, denominator, 2, &filterHandleAz)){return false;}
+    return true;
+}
+
 void MahonyFilterTask()
 {
-    bmx055Data_t imuData;
-
     TickType_t lastTickTime = xTaskGetTickCount();
 
     uint32_t lastTimeCalled = 0;
@@ -62,8 +79,13 @@ void MahonyFilterTask()
 
     while(1)
     {
+        bmx055Data_t imuData;
         Bmx055GetData(&imuData);
         float sampleTime = GetTimeElapsed(&lastTimeCalled, true);
+
+        DigitalFilterProcess(filterHandleAx, imuData.ax, &(imuData.ax));
+        DigitalFilterProcess(filterHandleAy, imuData.ay, &(imuData.ay));
+        DigitalFilterProcess(filterHandleAz, imuData.az, &(imuData.az));
 
         /** calc estimated acc and mag vector positions based on last iteration **/
         quaternion_t accEstimate = QuatProd(QuatProd(QuatInv(orientation),initialAccQuatVector),orientation);

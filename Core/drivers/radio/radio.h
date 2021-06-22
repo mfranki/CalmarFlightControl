@@ -42,7 +42,7 @@ typedef struct{
  * @param [in] GPIOx - GPIO port
  * @param [in] GPIO_Pin
  */
-void RadioIrq(radioChannel_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+void RadioIsr(radioChannel_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 
 /**@brief getter for radio channel data and last update time
  *        asserts if channel is invalid

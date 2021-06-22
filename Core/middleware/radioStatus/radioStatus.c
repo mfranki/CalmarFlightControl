@@ -10,6 +10,7 @@
 #include "app/deviceManager/deviceManager.h"
 
 #include "middleware/radioStatus/radioStatus.h"
+
 #include "drivers/utils/utils.h"
 
 #include "cmsis_os.h"
@@ -18,7 +19,7 @@
                           PRIVATE DEFINES / MACROS
 *****************************************************************************/
 
-
+#define CHANNEL_MID_POS (0.5f)
 
 /*****************************************************************************
                      PRIVATE STRUCTS / ENUMS / VARIABLES
@@ -50,7 +51,15 @@ void RadioStatusTask()
                 radioChannelCurrentData[channel] = 0;
                 allRadioChannelsAvailable = false;
             } else {
-                radioChannelCurrentData[channel] = data.channelData;
+                if(channel == RADIO_ROLL_CHANNEL ||
+                   channel == RADIO_PITCH_CHANNEL ||
+                   channel == RADIO_YAW_CHANNEL)
+                {
+                    radioChannelCurrentData[channel] = (data.channelData-CHANNEL_MID_POS)*2;
+                } else {
+                    radioChannelCurrentData[channel] = data.channelData;
+                }
+
             }
 
             if(DeviceManagerGetOperatingMode() == DEVICE_INITIALIZATION)
@@ -78,13 +87,13 @@ void RadioStatusTask()
             {
                 radioChannelCurrentData[channel] = 0;
             }
-
+/**
             if(DeviceManagerGetOperatingMode() == DEVICE_FLIGHT &&
                channel == RADIO_SWITCH_CHANNEL &&
                channel == RADIO_DIAL_CHANNEL)
             {
                 radioChannelCurrentData[channel] = 0;
-            }
+            }*/
         }
 
         radioSignalAvailable = allRadioChannelsAvailable;

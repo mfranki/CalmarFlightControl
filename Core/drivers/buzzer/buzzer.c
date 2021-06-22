@@ -22,14 +22,14 @@
 *****************************************************************************/
 
 static TIM_HandleTypeDef* htim;
-static uint32_t timChannel = 0;
+static volatile uint32_t timChannel = 0;
 
-static uint32_t cycleCntr = 0;
-static uint32_t cycleCount = 0;
+static volatile uint32_t cycleCntr = 0;
+static volatile uint32_t cycleCount = 0;
 
-static const uint8_t* currentAudioData = NULL;
-static uint32_t oversampleCntr = 0;
-static uint32_t oversampleCount = 0;
+static const volatile uint8_t* currentAudioData = NULL;
+static volatile uint32_t oversampleCntr = 0;
+static volatile uint32_t oversampleCount = 0;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION

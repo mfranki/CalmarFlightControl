@@ -23,7 +23,7 @@
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
-
+bool MahonyFilterInit();
 /**@brief mahony filter task
  */
 void MahonyFilterTask();

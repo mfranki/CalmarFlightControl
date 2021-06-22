@@ -120,6 +120,17 @@ vector_t QuatTranslateToRotationVector(quaternion_t q)
     return VectorMultiply(VectorNorm(q.v),angle);
 }
 
+quaternion_t QuatTranslateVectorToQuaternion(vector_t v)
+{
+    float angle = VectorLength(v);
+    v = VectorNorm(v);
+
+    quaternion_t q = {.w = cos(angle/2),
+                      .v = VectorMultiply(v,sin(angle/2))};
+
+    return q;
+}
+
 /******************************************************************************
                         PRIVATE FUNCTION IMPLEMENTATION
 ******************************************************************************/

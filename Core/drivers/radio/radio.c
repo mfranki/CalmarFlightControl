@@ -29,9 +29,9 @@
 static uint32_t channelStateChangeTime[RADIO_CHANNEL_COUNT] = {0,0,0,0,0,0};
 
 /** @brief keeps channel data in range   0..1 **/
-static float channelData[RADIO_CHANNEL_COUNT] = {0,0,0,0,0,0};
+static volatile float channelData[RADIO_CHANNEL_COUNT] = {0,0,0,0,0,0};
 
-static bool radioSignalAvailable = false;
+static volatile bool radioSignalAvailable = false;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION
@@ -43,7 +43,7 @@ static bool radioSignalAvailable = false;
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
 
-void RadioIrq(radioChannel_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
+void RadioIsr(radioChannel_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 {
     if(channel >= RADIO_CHANNEL_COUNT)
     {
@@ -55,6 +55,9 @@ void RadioIrq(radioChannel_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
     if(0 == HAL_GPIO_ReadPin(GPIOx,GPIO_Pin))
     {
         channelData[channel] = (timeElapsed-PWM_MIN_UP_TIME_S)/(PWM_MAX_UP_TIME_S-PWM_MIN_UP_TIME_S);
+
+        if(channelData[channel] > 1){channelData[channel] = 1;}
+        if(channelData[channel] < 0){channelData[channel] = 0;}
     }
 
     radioSignalAvailable = true;

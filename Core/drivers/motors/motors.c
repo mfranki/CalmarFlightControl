@@ -20,7 +20,7 @@
                      PRIVATE STRUCTS / ENUMS / VARIABLES
 *****************************************************************************/
 
-TIM_HandleTypeDef* htim;
+static TIM_HandleTypeDef* htim;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION

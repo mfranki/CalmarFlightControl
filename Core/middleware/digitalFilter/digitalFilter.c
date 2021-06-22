@@ -108,7 +108,7 @@ bool DigitalFilterDeleteFilter(digitalFilterHandle_t filterHandle)
 
 bool DigitalFilterProcess(digitalFilterHandle_t filterHandle, float curentSignalValue, float* filterOutput)
 {
-    *filterOutput = 0;
+    float filterOut = 0;
 
     for(uint32_t i=0; i<((filter_t*)filterHandle)->order; i++)
     {
@@ -119,22 +119,24 @@ bool DigitalFilterProcess(digitalFilterHandle_t filterHandle, float curentSignal
         }
 
         /**< U(k-i-1)*numerator[i+1] - Y(k-i-1)*denominator[i+1] **/
-        *filterOutput += fd.input*(((filter_t*)filterHandle)->numerator[i+1]) - fd.output*(((filter_t*)filterHandle)->denominator[i+1]);
+        filterOut += fd.input*(((filter_t*)filterHandle)->numerator[i+1]) - fd.output*(((filter_t*)filterHandle)->denominator[i+1]);
     }
 
     /**< U(0)*numerator[0]**/
-    *filterOutput += curentSignalValue*(((filter_t*)filterHandle)->numerator[0]);
-    *filterOutput /= (((filter_t*)filterHandle)->denominator[0]);
+    filterOut += curentSignalValue*(((filter_t*)filterHandle)->numerator[0]);
+    filterOut /= (((filter_t*)filterHandle)->denominator[0]);
 
     filterData_t newestData = {
             .input = curentSignalValue,
-            .output = *filterOutput
+            .output = filterOut
     };
 
     if(RB_OK != RollingBufferWrite(((filter_t*)filterHandle)->bufferHandle,&newestData))
     {
         return false;
     }
+
+    *filterOutput = filterOut;
 
     return true;
 }
