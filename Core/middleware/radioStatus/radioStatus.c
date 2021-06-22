@@ -87,13 +87,13 @@ void RadioStatusTask()
             {
                 radioChannelCurrentData[channel] = 0;
             }
-/**
+
             if(DeviceManagerGetOperatingMode() == DEVICE_FLIGHT &&
                channel == RADIO_SWITCH_CHANNEL &&
                channel == RADIO_DIAL_CHANNEL)
             {
                 radioChannelCurrentData[channel] = 0;
-            }*/
+            }
         }
 
         radioSignalAvailable = allRadioChannelsAvailable;

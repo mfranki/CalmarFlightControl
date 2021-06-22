@@ -165,7 +165,7 @@ deviceOperatingModes_t DeviceManagerGetOperatingMode()
 /******************************************************************************
                         PRIVATE FUNCTION IMPLEMENTATION
 ******************************************************************************/
-#include "math.h"
+
 static void DeviceManagerTask()
 {
     while(1)
