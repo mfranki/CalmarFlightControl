@@ -27,7 +27,7 @@
 #define CELL_VOLTAGE_MIN_SAFE (3.2f) ///< [V]
 #define CELL_VOLTAGE_DEPLEATED (3.3f) ///< [V]
 #define CELL_VOLTAGE_LOW (3.5f)  ///< [V]
-#define CELL_VOLTAGE_MAX_SAFE (4.2f) ///< [V]
+#define CELL_VOLTAGE_MAX_SAFE (4.3f) ///< [V]
 #define CELL_VOLTAGE_MAX  (4.4f) ///< [V]
 
 #define CELL_VOLTAGE_HYSTERESIS (0.05f) ///< [V]

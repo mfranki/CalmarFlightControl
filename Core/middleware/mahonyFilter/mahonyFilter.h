@@ -24,6 +24,12 @@
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
 
+/**@brief initializes acc filters
+ *
+ * @return true if successful
+ */
+bool MahonyFilterInit();
+
 /**@brief mahony filter task
  */
 void MahonyFilterTask();

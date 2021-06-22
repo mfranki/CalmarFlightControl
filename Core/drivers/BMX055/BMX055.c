@@ -133,7 +133,7 @@
 #define GYRO_RESOLUTION_500_DEG (0.0153f)   ///< gyro resolution in [(deg/s)/LSB
 #define GYRO_RESOLUTION_1000_DEG (0.0305f)   ///< gyro resolution in [(deg/s)/LSB
 #define GYRO_RESOLUTION_2000_DEG (0.061f)   ///< gyro resolution in [(deg/s)/LSB
-#define GYRO_RANGE_DEFAULT GYRO_RANGE_2000_DEG
+#define GYRO_RANGE_DEFAULT GYRO_RANGE_250_DEG
 
 #define GYRO_HBW (0x13U)    ///< REGISTER ADDRESS
 #define GYRO_HBW_SHADOW_DISABLE_BIT (0x40U)

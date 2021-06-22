@@ -28,6 +28,7 @@
 #include "middleware/radioStatus/radioStatus.h"
 #include "middleware/remoteSettings/remoteSettings.h"
 #include "middleware/memory/memory.h"
+#include "middleware/flightController/flightController.h"
 
 /*****************************************************************************
                           PRIVATE DEFINES / MACROS
@@ -49,7 +50,9 @@ enum{
     INIT_LOOP_EEPROM,
     INIT_LOOP_BMX,
     INIT_LOOP_ADC,
-    INIT_LOOP_MOTORS
+    INIT_LOOP_MOTORS,
+    INIT_LOOP_REMOTE_SETTINGS,
+    INIT_LOOP_FLIGHT_CONTROL
 };
 
 
@@ -73,6 +76,7 @@ static struct{
     TaskHandle_t mahonyFilterTask;
     TaskHandle_t imuCalibrationTask;
     TaskHandle_t deviceManagerTask;
+    TaskHandle_t flightControllerTask;
 }taskHandles;
 
 /*****************************************************************************
@@ -124,20 +128,30 @@ void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_ADC)
     }
+    MahonyFilterInit();
     if(!MotorsInit(timMotorsHandle))
     {
         INITIALIZATION_FAIL_LOOP(INIT_LOOP_MOTORS)
     }
+    if(!RemoteSettingsInit())
+    {
+        INITIALIZATION_FAIL_LOOP(INIT_LOOP_REMOTE_SETTINGS)
+    }
+    if(!FlightControllerInit())
+    {
+        INITIALIZATION_FAIL_LOOP(INIT_LOOP_FLIGHT_CONTROL)
+    }
 
     /** CREATE TASKS **/
 
-    xTaskCreate(&SoundNotificationTask, "soundNotificationTask", 100,  NULL, 0, &(taskHandles.soundNotificationTask));
-    xTaskCreate(&RadioStatusTask,       "radioStatusTask",       100,  NULL, 0, &(taskHandles.radioStatusTask      ));
-    xTaskCreate(&RemoteSettingsTask,    "remoteSettingsTask",    100,  NULL, 0, &(taskHandles.remoteSettingsTask   ));
-    xTaskCreate(&BatteryStatusTask,     "batteryStatusTask",     100,  NULL, 0, &(taskHandles.batteryStatusTask    ));
-    xTaskCreate(&MahonyFilterTask,      "mahonyFilterTask",      300,  NULL, 1, &(taskHandles.mahonyFilterTask     ));
-    xTaskCreate(&ImuCalibrationTask,    "imuCalibrationTask",    1000, NULL, 0, &(taskHandles.imuCalibrationTask              ));
+    xTaskCreate(&SoundNotificationTask, "soundNotificationTask", 200,  NULL, 0, &(taskHandles.soundNotificationTask));
+    xTaskCreate(&RadioStatusTask,       "radioStatusTask",       200,  NULL, 0, &(taskHandles.radioStatusTask      ));
+    xTaskCreate(&RemoteSettingsTask,    "remoteSettingsTask",    200,  NULL, 0, &(taskHandles.remoteSettingsTask   ));
+    xTaskCreate(&BatteryStatusTask,     "batteryStatusTask",     200,  NULL, 0, &(taskHandles.batteryStatusTask    ));
+    xTaskCreate(&MahonyFilterTask,      "mahonyFilterTask",      500,  NULL, 1, &(taskHandles.mahonyFilterTask     ));
+    xTaskCreate(&ImuCalibrationTask,    "imuCalibrationTask",    1000, NULL, 0, &(taskHandles.imuCalibrationTask   ));
     xTaskCreate(&DeviceManagerTask,     "deviceManagerTask",     200,  NULL, 0, &(taskHandles.deviceManagerTask    ));
+    xTaskCreate(&FlightControllerTask,  "flightControllerTask",  300,  NULL, 0, &(taskHandles.flightControllerTask ));
 
     operatingMode = DEVICE_STANDBY;
 
@@ -169,6 +183,7 @@ static void DeviceManagerTask()
             if(RadioStatusGetChannelData(RADIO_THROTTLE_CHANNEL) > THROTTLE_OFF_TRH)
             {
                 operatingMode = DEVICE_FLIGHT;
+                vTaskResume(taskHandles.flightControllerTask);
                 continue;
             }
 
@@ -193,8 +208,8 @@ static void DeviceManagerTask()
 
                     continue;
                 } else  {
-                    operatingMode = DEVICE_STANDBY;
                     MemorySaveRegisteredVariables();
+                    operatingMode = DEVICE_STANDBY;
                     continue;
                 }
 
@@ -244,6 +259,10 @@ static void DeviceManagerTask()
                 if(flightModeZerosCounter++ >= FLIGHT_MODE_ZEROS_MAX_COUNT)
                 {
                     flightModeZerosCounter = 0;
+                    MotorsSet(MOTORS_FRONT_RIGHT,  0);
+                    MotorsSet(MOTORS_FRONT_LEFT ,  0);
+                    MotorsSet(MOTORS_BACK_LEFT  ,  0);
+                    MotorsSet(MOTORS_BACK_RIGHT ,  0);
                     operatingMode = DEVICE_STANDBY;
                     continue;
                 }
@@ -268,6 +287,10 @@ static void DeviceManagerTask()
             if(0)       ///< check if device reached home position
             {
                 homingCounter = 0;
+                MotorsSet(MOTORS_FRONT_RIGHT,  0);
+                MotorsSet(MOTORS_FRONT_LEFT ,  0);
+                MotorsSet(MOTORS_BACK_LEFT  ,  0);
+                MotorsSet(MOTORS_BACK_RIGHT ,  0);
                 operatingMode = DEVICE_STANDBY;
                 continue;
             }
@@ -286,33 +309,32 @@ static void DeviceManagerTask()
         }
 
 
-
-    /*    quaternion_t q = MahonyFilterGetOrientation();
-        vector_t v = QuatTranslateToRotationVector(q);
-        UartWrite("%f\t%f\t%f\r\n",v.x*180/3.141,v.y*180/3.141,v.z*180/3.141);
-        //UartWrite("%f\t%f\t%f\t%f\r\n",q.w,q.i,q.j,q.k);
-/*
-        bmx055Data_t imuData;
-        Bmx055GetData(&imuData);
-/*        UartWrite("%f\t %f\t %f\t %f\t %f\t %f\t \r\n",imuData.ax,
-                                                       imuData.ay,
-                                                       imuData.az,
-                                                       imuData.gx,
-                                                       imuData.gy,
-                                                       imuData.gz);*/
-    /*
-        static const char* modes[] = {
-                "DEVICE_INITIALIZATION\n",  /// 0
-                "DEVICE_STANDBY\n",         /// 1
-                "DEVICE_CALIBRATION\n",     /// 2
-                "DEVICE_SETTINGS\n",        /// 3
-                "DEVICE_FLIGHT\n",          /// 4
-                "DEVICE_HOMING\n",          /// 5
-                "DEVICE_ERROR\n"
+/*static const char* modes[] = {
+                "DEVICE_INITIALIZATION",  /// 0
+                "DEVICE_STANDBY",         /// 1
+                "DEVICE_CALIBRATION",     /// 2
+                "DEVICE_SETTINGS",        /// 3
+                "DEVICE_FLIGHT",          /// 4
+                "DEVICE_HOMING",          /// 5
+                "DEVICE_ERROR"
         };
 
-        UartWrite(modes[operatingMode]);*/
+        UartWrite(modes[operatingMode]);
+        UartWrite(" %f\r\n",RadioStatusGetChannelData(RADIO_SWITCH_CHANNEL));*/
+/*
+       quaternion_t q = MahonyFilterGetOrientation();
+        vector_t v = QuatTranslateToRotationVector(q);
+        UartWrite("%f\t%f\t%f\r\n",v.x*180/3.141,v.y*180/3.141,v.z*180/3.141);*/
+        //UartWrite("%f\t%f\r\n",v.x*180/3.141,v.y*180/3.141);
+        //UartWrite("%f\t%f\t%f\t%f\r\n",q.w,q.i,q.j,q.k);
 
+/*        bmx055Data_t imuData;
+        Bmx055GetData(&imuData);
+
+        UartWrite("%f\t %f\t\r\n",atan2(imuData.ay,-imuData.az)*180/M_PI,
+                                  atan2(-imuData.ax,-imuData.az)*180/M_PI);
+
+*/
         osDelay(100);
     }
 }

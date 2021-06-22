@@ -25,7 +25,7 @@
 
 static ADC_HandleTypeDef* adcHandle;
 
-static bool waitingForMeasurement = false;
+static volatile bool waitingForMeasurement = false;
 
 /*****************************************************************************
                          PRIVATE FUNCTION DECLARATION

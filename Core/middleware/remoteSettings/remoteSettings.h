@@ -15,24 +15,33 @@
                        PUBLIC DEFINES / MACROS / ENUMS
 *****************************************************************************/
 
+/**@warning when adding new settings variable, it is required to update:
+ *  - eeprom saving mechanism in RemoteSettingsInit
+ *  - variablesDefaultValues
+ *  - variablesMultipliers
+ */
 typedef enum{
-    RS_CALIBRATION = 0,
-    RS_PID_X_P,
-    RS_PID_X_I,
-    RS_PID_X_D,
-    RS_PID_Y_P,
-    RS_PID_Y_I,
-    RS_PID_Y_D,
-    RS_PID_Z_P,
-    RS_PID_Z_I,
-    RS_PID_Z_D,
+    RS_CALIBRATION = 0,/**< RS_CALIBRATION */
+    RS_PID_XY_P,       /**< RS_PID_XY_P */
+    RS_PID_XY_I,       /**< RS_PID_XY_I */
+    RS_PID_XY_D,       /**< RS_PID_XY_D */
+    RS_PID_Z_P,        /**< RS_PID_Z_P */
+    RS_PID_Z_I,        /**< RS_PID_Z_I */
+    RS_PID_Z_D,        /**< RS_PID_Z_D */
+    RS_PID_N,          /**< RS_PID_N */
 
-    RS_VARIABLES_COUNT
+    RS_VARIABLES_COUNT /**< RS_VARIABLES_COUNT */
 }settingsVariable_t;
 
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION
 *****************************************************************************/
+
+/**@brief registers settings variables in memory
+ *
+ * @return true if successful
+ */
+bool RemoteSettingsInit();
 
 /**@brief freertos task
  */

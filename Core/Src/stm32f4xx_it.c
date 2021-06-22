@@ -174,14 +174,14 @@ void EXTI9_5_IRQHandler(void)
     hexti.Line = EXTI_LINE_6;
     if(HAL_EXTI_GetPending(&hexti, EXTI_TRIGGER_RISING_FALLING))
     {
-        RadioIrq(RADIO_CHANNEL_5, PWM_IN_5_GPIO_Port, PWM_IN_5_Pin);
+        RadioIsr(RADIO_CHANNEL_5, PWM_IN_5_GPIO_Port, PWM_IN_5_Pin);
         HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
     }
 
     hexti.Line = EXTI_LINE_7;
     if(HAL_EXTI_GetPending(&hexti, EXTI_TRIGGER_RISING_FALLING))
     {
-        RadioIrq(RADIO_CHANNEL_6, PWM_IN_6_GPIO_Port, PWM_IN_6_Pin);
+        RadioIsr(RADIO_CHANNEL_6, PWM_IN_6_GPIO_Port, PWM_IN_6_Pin);
         HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
     }
     return;
@@ -233,26 +233,26 @@ void EXTI15_10_IRQHandler(void)
     hexti.Line = EXTI_LINE_12;
     if(HAL_EXTI_GetPending(&hexti, EXTI_TRIGGER_RISING_FALLING))
     {
-        RadioIrq(RADIO_CHANNEL_1, PWM_IN_1_GPIO_Port, PWM_IN_1_Pin);
+        RadioIsr(RADIO_CHANNEL_1, PWM_IN_1_GPIO_Port, PWM_IN_1_Pin);
         HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
     }
 
     hexti.Line = EXTI_LINE_13;
     if(HAL_EXTI_GetPending(&hexti, EXTI_TRIGGER_RISING_FALLING))
     {
-        RadioIrq(RADIO_CHANNEL_2, PWM_IN_2_GPIO_Port, PWM_IN_2_Pin);
+        RadioIsr(RADIO_CHANNEL_2, PWM_IN_2_GPIO_Port, PWM_IN_2_Pin);
         HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
     }
     hexti.Line = EXTI_LINE_14;
     if(HAL_EXTI_GetPending(&hexti, EXTI_TRIGGER_RISING_FALLING))
     {
-        RadioIrq(RADIO_CHANNEL_3, PWM_IN_3_GPIO_Port, PWM_IN_3_Pin);
+        RadioIsr(RADIO_CHANNEL_3, PWM_IN_3_GPIO_Port, PWM_IN_3_Pin);
         HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_14);
     }
     hexti.Line = EXTI_LINE_15;
     if(HAL_EXTI_GetPending(&hexti, EXTI_TRIGGER_RISING_FALLING))
     {
-        RadioIrq(RADIO_CHANNEL_4, PWM_IN_4_GPIO_Port, PWM_IN_4_Pin);
+        RadioIsr(RADIO_CHANNEL_4, PWM_IN_4_GPIO_Port, PWM_IN_4_Pin);
         HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_15);
     }
     return;

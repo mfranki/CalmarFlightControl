@@ -88,9 +88,16 @@ float QuatLength(quaternion_t q);
  */
 quaternion_t QuatNorm(quaternion_t q);
 
-/**@brief translates given quaternion into rotations in 3 axes
+/**@brief translates quaternion to rotation described by rotation around vector v by angle = ||v||
  *
  * @param [in] q
  * @return rotation vector
  */
 vector_t QuatTranslateToRotationVector(quaternion_t q);
+
+/**@brief translates rotation described by rotation around vector v by angle = ||v|| to quaternion
+ *
+ * @param [in] v rotation vector
+ * @return rotation quaternion
+ */
+quaternion_t QuatTranslateVectorToQuaternion(vector_t v);

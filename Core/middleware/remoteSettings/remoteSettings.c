@@ -13,6 +13,7 @@
 
 #include "middleware/soundNotifications/soundNotifications.h"
 #include "middleware/radioStatus/radioStatus.h"
+#include "middleware/memory/memory.h"
 
 #include <stdlib.h>
 #include <cmsis_os.h>
@@ -31,7 +32,7 @@
 #define VALUE_READOUT_COUNTER_MAX (9u)
 #define VALUE_CHANGE_CONTINUE_COUNTER_MAX (8u)
 
-#define VALUE_CHANGE_SCALE (20.0f)
+#define VALUE_CHANGE_SCALE (2.0f)
 
 #define DIGITS_IN_INT32 (10u)       ///< decimial digits in int32_t
 
@@ -48,6 +49,26 @@ typedef enum{
 /**@brief all settings variables
  */
 static float variables[RS_VARIABLES_COUNT];
+static const float variablesDefaultValues[] = {
+       0,       ///< RS_CALIBRATION
+       0.1,     ///< RS_PID_XY_P
+       0.01,    ///< RS_PID_XY_I
+       0.02,    ///< RS_PID_XY_D
+       0.1,     ///< RS_PID_Z_P
+       0.01,    ///< RS_PID_Z_I
+       0.05,    ///< RS_PID_Z_D
+       70       ///< RS_PID_N
+};
+static const float variablesMultipliers[] = {
+        10,       ///< RS_CALIBRATION
+        0.01,     ///< RS_PID_XY_P
+        0.01,    ///< RS_PID_XY_I
+        0.01,    ///< RS_PID_XY_D
+        0.01,     ///< RS_PID_Z_P
+        0.01,    ///< RS_PID_Z_I
+        0.01,    ///< RS_PID_Z_D
+        10       ///< RS_PID_N
+};
 
 static void (**updateCallbacks)() = NULL;
 static uint32_t updateCallbacksCount = 0;
@@ -130,6 +151,27 @@ static void PlayNumber(settingsVariable_t number);
                            INTERFACE IMPLEMENTATION
 *****************************************************************************/
 
+bool RemoteSettingsInit()
+{
+    if(!EepromRead(EEPROM_PID_XY_P, &variables[RS_PID_XY_P])){variables[RS_PID_XY_P] = variablesDefaultValues[RS_PID_XY_P];}
+    if(!EepromRead(EEPROM_PID_XY_I, &variables[RS_PID_XY_I])){variables[RS_PID_XY_I] = variablesDefaultValues[RS_PID_XY_I];}
+    if(!EepromRead(EEPROM_PID_XY_D, &variables[RS_PID_XY_D])){variables[RS_PID_XY_D] = variablesDefaultValues[RS_PID_XY_D];}
+    if(!EepromRead(EEPROM_PID_Z_P , &variables[RS_PID_Z_P ])){variables[RS_PID_Z_P ] = variablesDefaultValues[RS_PID_Z_P ];}
+    if(!EepromRead(EEPROM_PID_Z_I , &variables[RS_PID_Z_I ])){variables[RS_PID_Z_I ] = variablesDefaultValues[RS_PID_Z_I ];}
+    if(!EepromRead(EEPROM_PID_Z_D , &variables[RS_PID_Z_D ])){variables[RS_PID_Z_D ] = variablesDefaultValues[RS_PID_Z_D ];}
+    if(!EepromRead(EEPROM_PID_N   , &variables[RS_PID_N   ])){variables[RS_PID_N   ] = variablesDefaultValues[RS_PID_N   ];}
+
+    if(!MemoryRegisterVariable(EEPROM_PID_XY_P, &variables[RS_PID_XY_P])){return false;}
+    if(!MemoryRegisterVariable(EEPROM_PID_XY_I, &variables[RS_PID_XY_I])){return false;}
+    if(!MemoryRegisterVariable(EEPROM_PID_XY_D, &variables[RS_PID_XY_D])){return false;}
+    if(!MemoryRegisterVariable(EEPROM_PID_Z_P , &variables[RS_PID_Z_P ])){return false;}
+    if(!MemoryRegisterVariable(EEPROM_PID_Z_I , &variables[RS_PID_Z_I ])){return false;}
+    if(!MemoryRegisterVariable(EEPROM_PID_Z_D , &variables[RS_PID_Z_D ])){return false;}
+    if(!MemoryRegisterVariable(EEPROM_PID_N   , &variables[RS_PID_N   ])){return false;}
+
+    return true;
+}
+
 void RemoteSettingsTask()
 {
     settingsVariable_t currentSelectedVariable = 0;
@@ -163,7 +205,7 @@ void RemoteSettingsTask()
 
         if(switchState == SWITCH_MENU_ITEM_VALUE && valueChangeStartingPointReady)
         {
-            variables[currentSelectedVariable] = valueChangeStartingPoint-VALUE_CHANGE_SCALE*(dialValue-valueChangeDialReference);
+            variables[currentSelectedVariable] = valueChangeStartingPoint-VALUE_CHANGE_SCALE*variablesMultipliers[currentSelectedVariable]*(dialValue-valueChangeDialReference);
         } else {
             valueChangeStartingPointReady = false;
         }
@@ -356,7 +398,7 @@ static void PlayFloat(float f)
     osDelay(500);
     uint32_t parts = (uint32_t)((f-(float)wholes)*100);
 
-    PlayUint(parts,2);
+    PlayUint(parts,3);
 }
 
 static void PlayUint(uint32_t integer, uint8_t minDigits)

@@ -15,7 +15,14 @@
                        PUBLIC DEFINES / MACROS / ENUMS
 *****************************************************************************/
 
-typedef void* pidHandle_t;
+typedef enum{
+    PID_P=0,
+    PID_I,
+    PID_D,
+    PID_N,
+}pidParameters_t;
+
+typedef uint32_t pidHandle_t;
 
 /*****************************************************************************
                          PUBLIC INTERFACE DECLARATION
@@ -23,16 +30,25 @@ typedef void* pidHandle_t;
 
 /**@brief initializes discrete PID
  *
+ * @param [in] pidHandle
  * @param [in] p
  * @param [in] i
  * @param [in] d
  * @param [in] filterCoefficient - for velocity approximation
- * @return handle to pid regulator
+ * @return true if successful
  */
-pidHandle_t PidInit(float p, float i, float d, float filterCoefficient);
+bool PidInit(pidHandle_t *pidHandle, float p, float i, float d, float filterCoefficient);
 
 /**@brief calculates next PID output value
  *        needs to be called regularly with desired sampling frequency
+ *
+ *         pid model:
+ *
+ *         P + I*Ts/(z-1) + D*N/(1+N*Ts/(z-1))
+ *
+ *         where this is velocity filter:
+ *
+ *         N/(1+N*Ts/(z-1))
  *
  * @param [in] pidHandle
  * @param [in] input input data
@@ -40,11 +56,11 @@ pidHandle_t PidInit(float p, float i, float d, float filterCoefficient);
  */
 float PidCalc(pidHandle_t pidHandle, float input);
 
-/**@brief calculates PID using also externally calculated velocity
+/**@brief setter for given pid parameter
  *
  * @param [in] pidHandle
- * @param [in] input - input data
- * @param [in] inputVel - externally calculated input data velocity
- * @return PID output
+ * @param [in] param
+ * @param [in] value
+ * @return true if successful
  */
-float PidCalcExternVel(pidHandle_t pidHandle, float input, float inputVel);
+bool PidSetParam(pidHandle_t pidHandle, pidParameters_t param, float value);

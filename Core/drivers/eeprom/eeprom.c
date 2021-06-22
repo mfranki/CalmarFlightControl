@@ -230,7 +230,10 @@ void RefreshEeprom()
 
     for(uint32_t index=0; index<EEPROM_VARIABLE_COUNT; index++)
     {
-        EepromWrite(index, (&variables[index]));
+        if(variablesDone[index])
+        {
+            EepromWrite(index, (&variables[index]));
+        }
     }
 }
 

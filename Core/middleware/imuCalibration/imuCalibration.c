@@ -29,6 +29,7 @@
 *****************************************************************************/
 
 #define ACC_GYRO_CALIBRATION_SAMPLES (1000u)    ///< amount of samples taken for acc gyro calibration
+#define ACC_Z_TARGET_VALUE (-9.81f)              ///< earth gravity acceleration
 
 #define AXIS_ANGLE_TOLERANCE (15*M_PI/180) ///< +-15 deg
 #define AXIS_DOWN_TOLREANCE (1-cos(AXIS_ANGLE_TOLERANCE))   ///< tolerance of gravity vector for deciding which axis faces down
@@ -137,12 +138,19 @@ void ImuCalibrationTask()
             osDelay(1);
         }
 
-        accSum = VectorMultiply(accSum,1/ACC_GYRO_CALIBRATION_SAMPLES);
-        gyroSum = VectorMultiply(gyroSum,1/ACC_GYRO_CALIBRATION_SAMPLES);
+        accSum = VectorMultiply(accSum,1/((float)ACC_GYRO_CALIBRATION_SAMPLES));
+        gyroSum = VectorMultiply(gyroSum,1/((float)ACC_GYRO_CALIBRATION_SAMPLES));
 
-        Bmx055SetAccOffsets(accSum.x,accSum.y,accSum.z);
+        Bmx055SetAccOffsets(accSum.x,accSum.y,accSum.z-ACC_Z_TARGET_VALUE);
         Bmx055SetGyroOffsets(gyroSum.x,gyroSum.y,gyroSum.z);
 
+        float calibration = 0;
+        RemoteSettingsGetVariable(RS_CALIBRATION, &calibration);
+        if(calibration < 0)
+        {
+            while(true != SoundNotificationsPlay(SN_CALIBRATION_FINISHED)){}
+            continue;
+        }
 
         if(DeviceManagerGetOperatingMode() != DEVICE_CALIBRATION)
         {
