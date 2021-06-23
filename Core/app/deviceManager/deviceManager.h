@@ -40,6 +40,7 @@ typedef enum{
  */
 void DeviceManagerInit(ADC_HandleTypeDef* adcHandle,
                        SPI_HandleTypeDef* spiBMXHandle,
+                       SPI_HandleTypeDef* spiLPSHandle,
                        TIM_HandleTypeDef* timBuzzerHandle,
                        UART_HandleTypeDef* uartDebugHandle,
                        TIM_HandleTypeDef* timMotorsHandle);
