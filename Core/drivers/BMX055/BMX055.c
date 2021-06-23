@@ -283,6 +283,10 @@ static bool NvmInit();
 
 bool Bmx055Init(SPI_HandleTypeDef *HSPI)
 {
+    if(HSPI == NULL)
+    {
+        return false;
+    }
     hspi = HSPI;
     HAL_GPIO_WritePin(CS_ACC_GPIO_Port,CS_ACC_Pin,1);
     HAL_GPIO_WritePin(CS_GYRO_GPIO_Port,CS_GYRO_Pin,1);
